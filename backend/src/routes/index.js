@@ -1,8 +1,12 @@
 import { Router } from "express";
-import turnoRoutes from "./turnoRoutes.js";
+import { createTurnoRoutes } from "./turnoRoutes.js";
+import turnoService from "../services/TurnoService.js";
+import authService from "../services/AuthService.js";
 
-const router = Router();
+export function createRoutes(turnos = turnoService, auth = authService) {
+	const router = Router();
+	router.use("/turnos", createTurnoRoutes(turnos, auth));
+	return router;
+}
 
-router.use("/turnos", turnoRoutes);
-
-export default router;
+export default createRoutes();

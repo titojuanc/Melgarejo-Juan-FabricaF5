@@ -1,6 +1,6 @@
 import Turno from "../models/Turno.js";
 
-class TurnoRepository {
+export class TurnoRepository {
     constructor() {
         this.turnos = [];
         this.nextId = 1;

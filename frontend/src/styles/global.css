@@ -529,6 +529,9 @@ main {
     grid-template-columns: 1fr 1fr;
     gap: 12px;
 }
+.form-row.single-field {
+    grid-template-columns: 1fr;
+}
 .checkbox-field {
     display: flex;
     align-items: center;

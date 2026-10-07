@@ -43,3 +43,15 @@ test("valida fechas reales, orden de horas, enteros y fechas pasadas", () => {
     assert.ok(validateReserva({ ...valid, clienteId: "" }).clienteId);
     assert.ok(validateReserva(valid, [{ ...valid, id: 2 }]).horaInicio);
 });
+
+test("no exige clienteId cuando la reserva pertenece a la sesion", () => {
+    assert.deepEqual(
+        validateReserva(
+            { ...valid, clienteId: "" },
+            [],
+            undefined,
+            { requireClientId: false },
+        ),
+        {},
+    );
+});

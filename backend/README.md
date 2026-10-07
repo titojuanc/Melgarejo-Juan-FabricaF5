@@ -26,6 +26,18 @@ Todas las respuestas mantienen `{ success: true, data }` o `{ success: false, me
 | `POST /auth/logout`   | Origen permitido                | Destruye la sesion y elimina la cookie.      |
 | `POST /auth/users`    | Administrador, origen permitido | Crea empleados u otros administradores; 201. |
 
+### Turnos
+
+| Metodo y ruta                     | Acceso                            | Resultado                                                |
+| ---------------------------------- | --------------------------------- | -------------------------------------------------------- |
+| `GET /turnos/disponibilidad`      | Publico                           | Fecha, horario y estado; sin datos del cliente.          |
+| `GET /turnos/mis`                 | Cliente autenticado               | Solo reservas asociadas al cliente de la sesion.         |
+| `GET /turnos`, `GET /turnos/:id`  | Empleado o admin                  | Listado y consulta interna.                              |
+| `POST /turnos`                    | Sesion y origen permitido         | El cliente se asigna desde la sesion; personal debe indicar uno existente. |
+| `PUT/DELETE /turnos/:id`           | Empleado/admin y origen permitido | Actualiza campos permitidos o elimina turno.             |
+
+El backend valida fecha real y futura, horario, cantidad de jugadores, perfil de cliente y superposicion. Un conflicto devuelve 409. Los clientes no pueden cambiar propietario, editar ni cancelar reservas; tampoco pueden consultar el listado interno.
+
 Registro:
 
 ```json
@@ -43,13 +55,13 @@ El equipo es opcional y no inscribe al usuario en un torneo. El email se normali
 
 Login requiere `email` y `password`. El administrador crea cuentas con los mismos datos del registro y `rol: "empleado"` o `rol: "admin"`. Las cuentas internas no generan un perfil de cliente; su `clienteId` es `null`. Crear otra cuenta no reemplaza la sesion del administrador.
 
-Errores: 400 para datos invalidos, 401 para falta de sesion o credenciales incorrectas, 403 para origen o permisos rechazados, 409 para email duplicado, 413 para cuerpos demasiado grandes y 429 para exceso de intentos. Registro y login comparten un limite de 20 peticiones por IP cada 15 minutos.
+Errores: 400 para datos invalidos, 401 para falta de sesion o credenciales incorrectas, 403 para origen o permisos rechazados, 409 para email duplicado o horario ocupado, 413 para cuerpos demasiado grandes y 429 para exceso de intentos. Registro y login comparten un limite de 20 peticiones por IP cada 15 minutos.
 
 ## Integracion del frontend
 
-Las peticiones deben incluir `credentials: "include"`. Para los POST el navegador envia automaticamente el encabezado `Origin`; los clientes de API o las pruebas manuales deben agregar un origen permitido, por ejemplo `http://localhost:5173`. Se rechazan los origenes ausentes o externos en operaciones de autenticacion que modifican estado, como proteccion CSRF.
+Las peticiones deben incluir `credentials: "include"`. Para POST/PUT/DELETE el navegador envia automaticamente el encabezado `Origin`; los clientes de API o las pruebas manuales deben agregar un origen permitido, por ejemplo `http://localhost:5173`. Se rechazan los origenes ausentes o externos en operaciones que modifican estado, como proteccion CSRF.
 
-Frontend y API deben utilizar el mismo nombre de host para la cookie `SameSite=Lax`: usar ambos con `localhost`, o ambos con `127.0.0.1`. No mezclar `http://127.0.0.1:5173` con `http://localhost:3000` para las sesiones. La integracion de Login/Register y el ajuste de los servicios del frontend pertenecen al siguiente paso.
+Frontend y API deben utilizar el mismo nombre de host para la cookie `SameSite=Lax`: usar ambos con `localhost`, o ambos con `127.0.0.1`. No mezclar `http://127.0.0.1:5173` con `http://localhost:3000` para las sesiones. Login/Register y las rutas de turnos utilizan esta misma cookie.
 
 La cookie `fabrica.sid` es HttpOnly, SameSite=Lax y Secure en produccion. La sesion se regenera al registrar o iniciar sesion; el servidor consulta el rol real de la cuenta, no un rol enviado por el navegador. Las respuestas de autenticacion no se almacenan en cache.
 
@@ -88,6 +100,6 @@ Configuracion por variables de entorno antes de iniciar Node; no se cargan archi
 
 El archivo local soporta una unica instancia del backend. Las altas simultaneas en esa instancia verifican nuevamente la unicidad del email y escriben usuario y cliente juntos mediante reemplazo de archivo. Un archivo danado provoca un error: no se borra ni se reinicia silenciosamente. Las sesiones en memoria y este almacenamiento son para la entrega, no para un despliegue productivo con multiples instancias.
 
-Los middlewares `requireAuthentication` y `requireRoles` quedan disponibles para los siguientes recursos. Las rutas anteriores de `/turnos` todavia no se protegen ni obtienen el cliente desde la sesion: esa adaptacion se hara junto con el frontend, para no romper el flujo actual durante esta etapa. Los paneles internos, recuperacion de contrasena y verificacion de email quedan pendientes.
+Los middlewares `requireAuthentication`, `requireRoles` y `requireTrustedOrigin` protegen las operaciones de turnos. Los paneles internos, recuperacion de contrasena y verificacion de email quedan pendientes.
 
-WhatsApp sera simulado en la entrega, sin mensajes ni enlaces reales. Esta etapa solo implementa el backend de autenticacion.
+WhatsApp sera simulado en la entrega, sin mensajes ni enlaces reales. El backend implementa autenticacion y turnos ligados a la sesion.

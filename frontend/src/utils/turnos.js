@@ -29,7 +29,12 @@ export function isOccupied(turnos, fecha, horaInicio, horaFin, excludeId) {
     );
 }
 
-export function validateReserva(data, turnos = [], excludeId) {
+export function validateReserva(
+    data,
+    turnos = [],
+    excludeId,
+    { requireClientId = true } = {},
+) {
     const errors = {};
     const parsedDate = new Date(`${data.fecha}T12:00:00`);
     if (
@@ -61,8 +66,9 @@ export function validateReserva(data, turnos = [], excludeId) {
         errors.cantidadJugadores =
             "Ingresa una cantidad entera mayor que cero.";
     if (
+        requireClientId &&
         !Number.isSafeInteger(Number(data.clienteId)) ||
-        Number(data.clienteId) < 1
+        requireClientId && Number(data.clienteId) < 1
     )
         errors.clienteId = "Ingresa un ID de cliente entero mayor que cero.";
     if (

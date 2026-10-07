@@ -3,6 +3,7 @@ import { Check, LoaderCircle, Save } from "lucide-react";
 import { useTurnos } from "./TurnosProvider.jsx";
 import { useNotifications } from "./Notifications.jsx";
 import { dateKey, validateReserva } from "../utils/turnos.js";
+import { useAuth } from "./AuthProvider.jsx";
 
 export default function TurnoForm({
     initial = {},
@@ -21,7 +22,9 @@ export default function TurnoForm({
     });
     const [errors, setErrors] = useState({});
     const [busy, setBusy] = useState(false);
-    const { turnos, save } = useTurnos();
+    const { availability, save } = useTurnos();
+    const { user } = useAuth();
+    const isClient = user?.rol === "cliente";
     const { notify } = useNotifications();
 
     function change(event) {
@@ -35,7 +38,9 @@ export default function TurnoForm({
 
     async function submit(event) {
         event.preventDefault();
-        const nextErrors = validateReserva(data, turnos, initial.id);
+        const nextErrors = validateReserva(data, availability, initial.id, {
+            requireClientId: !isClient,
+        });
         setErrors(nextErrors);
         if (Object.keys(nextErrors).length) {
             notify("Revisa los campos de la reserva.", "error");
@@ -47,14 +52,13 @@ export default function TurnoForm({
         setBusy(true);
         onBusyChange?.(true);
         try {
-            const turno = await save(
-                {
-                    ...data,
-                    clienteId: Number(data.clienteId),
-                    cantidadJugadores: Number(data.cantidadJugadores),
-                },
-                initial.id,
-            );
+            const turnoData = {
+                ...data,
+                cantidadJugadores: Number(data.cantidadJugadores),
+            };
+            if (isClient) delete turnoData.clienteId;
+            else turnoData.clienteId = Number(data.clienteId);
+            const turno = await save(turnoData, initial.id);
             onSaved?.(turno);
         } catch (error) {
             notify(error.message, "error");
@@ -103,15 +107,16 @@ export default function TurnoForm({
                     {field("horaInicio", "Desde", "time")}
                     {field("horaFin", "Hasta", "time")}
                 </div>
-                <div className="form-row">
+                <div className={isClient ? "form-row single-field" : "form-row"}>
                     {field("cantidadJugadores", "Jugadores", "number", {
                         min: 1,
                         step: 1,
                     })}
-                    {field("clienteId", "ID de cliente", "number", {
-                        min: 1,
-                        step: 1,
-                    })}
+                    {!isClient &&
+                        field("clienteId", "ID de cliente", "number", {
+                            min: 1,
+                            step: 1,
+                        })}
                 </div>
                 <label className="checkbox-field" htmlFor={`${prefix}-luces`}>
                     <input

@@ -8,7 +8,6 @@ import { useNotifications } from "./Notifications.jsx";
 const links = [
     ["/inicio", "Home"],
     ["/", "Reservar cancha"],
-    ["/turnos", "Turnos"],
     ["/gym", "Gym"],
     ["/cumpleanos", "Cumpleanos"],
     ["/torneos", "Torneos"],
@@ -72,6 +71,13 @@ export default function Layout({ children }) {
                                 {label}
                             </NavLink>
                         ))}
+                        {user && (
+                            <NavLink to="/turnos" end onClick={() => setOpen(false)}>
+                                {user.rol === "cliente"
+                                    ? "Mis reservas"
+                                    : "Gestionar turnos"}
+                            </NavLink>
+                        )}
                         {user ? (
                             <>
                                 <Link to="/cuenta" onClick={() => setOpen(false)}>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import {
     CalendarDays,
     Pencil,
@@ -15,20 +15,23 @@ import LoadState from "../components/LoadState.jsx";
 import Modal from "../components/Modal.jsx";
 import TurnoForm from "../components/TurnoForm.jsx";
 import { formatDate } from "../utils/turnos.js";
+import { useAuth } from "../components/AuthProvider.jsx";
 
 export default function TurnosPage() {
     const { turnos, loading, error, reload, remove } = useTurnos();
+    const { user, loading: authLoading } = useAuth();
     const { notify } = useNotifications();
     const [search, setSearch] = useState("");
     const [status, setStatus] = useState("");
     const [editing, setEditing] = useState(null);
     const [deleting, setDeleting] = useState(null);
     const [busy, setBusy] = useState(false);
+    const isStaff = user && ["empleado", "admin"].includes(user.rol);
     const filtered = turnos
         .filter(
             (turno) =>
                 (!status || turno.estado === status) &&
-                `${turno.id} ${turno.clienteId} ${turno.fecha}`.includes(
+                `${turno.id} ${isStaff ? turno.clienteId : ""} ${turno.fecha}`.includes(
                     search.trim(),
                 ),
         )
@@ -37,6 +40,14 @@ export default function TurnosPage() {
                 `${second.fecha} ${second.horaInicio}`,
             ),
         );
+
+    if (authLoading)
+        return (
+            <div className="page-container" role="status">
+                Cargando sesion...
+            </div>
+        );
+    if (!user) return <Navigate to="/cuenta" replace />;
 
     async function confirmDelete() {
         setBusy(true);
@@ -55,7 +66,7 @@ export default function TurnosPage() {
             <div className="page-heading">
                 <div>
                     <p className="eyebrow">LA FABRICA FUTBOL 5</p>
-                    <h1>TURNOS DE CANCHA</h1>
+                    <h1>{isStaff ? "GESTION DE TURNOS" : "MIS RESERVAS"}</h1>
                     <p>
                         {turnos.length}{" "}
                         {turnos.length === 1
@@ -64,7 +75,7 @@ export default function TurnosPage() {
                     </p>
                 </div>
                 <Link className="button primary" to="/">
-                    <Plus size={18} /> Nueva reserva
+                    <Plus size={18} /> {isStaff ? "Nueva reserva" : "Reservar cancha"}
                 </Link>
             </div>
             <div className="list-toolbar">
@@ -126,11 +137,11 @@ export default function TurnosPage() {
                                         "Turno",
                                         "Fecha",
                                         "Horario",
-                                        "Cliente",
+                                        ...(isStaff ? ["Cliente"] : []),
                                         "Jugadores",
                                         "Luces",
                                         "Estado",
-                                        "Acciones",
+                                        ...(isStaff ? ["Acciones"] : []),
                                     ].map((heading) => (
                                         <th scope="col" key={heading}>
                                             {heading}
@@ -146,7 +157,7 @@ export default function TurnosPage() {
                                         <td className="nowrap">
                                             {turno.horaInicio} a {turno.horaFin}
                                         </td>
-                                        <td>#{turno.clienteId}</td>
+                                        {isStaff && <td>#{turno.clienteId}</td>}
                                         <td>{turno.cantidadJugadores}</td>
                                         <td>
                                             {turno.incluyeLuces ? "Si" : "No"}
@@ -158,8 +169,9 @@ export default function TurnosPage() {
                                                 {turno.estado}
                                             </span>
                                         </td>
-                                        <td>
-                                            <div className="row-actions">
+                                        {isStaff && (
+                                            <td>
+                                                <div className="row-actions">
                                                 <button
                                                     className="icon-button"
                                                     title={`Editar turno ${turno.id}`}
@@ -180,8 +192,9 @@ export default function TurnosPage() {
                                                 >
                                                     <Trash2 size={17} />
                                                 </button>
-                                            </div>
-                                        </td>
+                                                </div>
+                                            </td>
+                                        )}
                                     </tr>
                                 ))}
                             </tbody>

@@ -31,8 +31,8 @@ Se verifico visualmente la pantalla "03 - Reservar Cancha" en la presentacion de
 
 - Estados de horarios escritos ademas del color, con botones semanticos y etiquetas accesibles.
 - Navegacion entre semanas y actualizacion de la disponibilidad.
-- Panel de reserva con fecha, horario, jugadores, ID de cliente y luces, acordes al contrato de la API.
-- Vista de turnos para busqueda, filtro, edicion y eliminacion, completando las operaciones existentes.
+- Panel de reserva con fecha, horario, jugadores y luces. El cliente no ingresa ID: el servidor lo obtiene de la sesion; el campo interno solo aparece para personal.
+- Vista de reservas propias para clientes, sin edicion ni cancelacion; personal autorizado conserva busqueda, filtro, edicion y eliminacion.
 - Adaptacion movil: menu expandible, panel apilado y desplazamiento interno de las tablas.
 - Importe "A confirmar": no se replica el precio del boceto porque no existe calculo de tarifas en la API.
 - Login/Register utiliza la API de autenticacion, restaura la sesion al iniciar y ofrece cierre de sesion desde la navegacion. El registro publico crea clientes; no permite elegir roles internos.
@@ -60,28 +60,31 @@ Las notificaciones se colocan dentro del dialogo activo para no quedar ocultas d
 
 ## Integracion con la API
 
-| Operacion | Metodo y ruta        |
-| --------- | -------------------- |
-| Listar    | `GET /turnos`        |
-| Crear     | `POST /turnos`       |
-| Editar    | `PUT /turnos/:id`    |
-| Eliminar  | `DELETE /turnos/:id` |
+| Operacion             | Metodo y ruta                    | Acceso                                        |
+| --------------------- | -------------------------------- | --------------------------------------------- |
+| Disponibilidad        | `GET /turnos/disponibilidad`     | Publico; solo fecha, horario y estado.        |
+| Reservas propias      | `GET /turnos/mis`                | Cliente autenticado; filtra por sesion.       |
+| Listado y consulta    | `GET /turnos`, `GET /turnos/:id` | Empleado o admin.                             |
+| Crear                 | `POST /turnos`                   | Sesion; clienteId del cliente viene del servidor. |
+| Editar y eliminar     | `PUT/DELETE /turnos/:id`         | Empleado o admin; origen local permitido.    |
 
 Los servicios centralizados procesan `{ success, data }` y lanzan errores ante fallos HTTP, JSON invalido o falta de conexion. Las peticiones incluyen credenciales de cookie. Un `401` inicial de `/auth/me` indica visitante y no genera una notificacion. Los componentes no realizan `fetch` directamente. La URL base es configurable con `VITE_API_URL`; Vite y la API usan `localhost` para compartir el host de la cookie.
 
 `/cuenta` reproduce los formularios de ingreso y registro del frame 1-4. El registro publico valida los campos del contrato de API y deja equipo como opcional. Al iniciar sesion o registrarse, la navegacion vuelve al flujo publico de reserva; el encabezado muestra la cuenta y permite cerrar sesion. No se almacena la contrasena ni se construyen paneles internos.
 
-La creacion envia fecha, inicio, fin, cantidad de jugadores, luces e ID de cliente. El estado inicial "Pendiente" lo decide el backend. El frontend conserva el estado existente al editar; no simula confirmaciones de pago.
+El backend valida fechas reales y futuras, horas, cantidades y superposicion; devuelve 409 si el horario ya fue ocupado. La actualizacion valida campos permitidos y no acepta cambiar propietario ni estado. Los clientes no pueden editar ni cancelar sus reservas. El estado inicial "Pendiente" lo decide el backend; no se simulan confirmaciones de pago.
 
-Se agrego CORS al backend para la comunicacion entre puertos locales. No se modificaron las reglas del servicio ni la persistencia original.
+Las mutaciones exigen una sesion y un origen confiable. El personal solo puede asignar reservas a un perfil de cliente existente.
 
 ## Pruebas
 
-`npm --prefix frontend test`: ocho pruebas automaticas de autenticacion, servicio HTTP, fechas locales y validaciones.
+`npm --prefix frontend test`: nueve pruebas automaticas de autenticacion, servicios HTTP, fechas locales y validaciones.
+
+`npm --prefix backend test`: trece pruebas de autenticacion, permisos, propiedad de turnos, privacidad de disponibilidad y conflictos.
 
 `npm --prefix frontend run build`: compilacion de produccion, incluyendo la fotografia en el bundle.
 
-Flujos verificados con navegador automatizado contra Express:
+Los flujos CRUD siguientes se verificaron en una iteracion previa a la proteccion de rutas por rol:
 
 1. Envio de formulario invalido y errores de campos.
 2. Seleccion de horario y creacion de reserva.
@@ -92,17 +95,22 @@ Flujos verificados con navegador automatizado contra Express:
 7. Error visible dentro de un dialogo de edicion.
 8. Escape y restauracion del foco al boton que abrio el dialogo.
 9. Navegacion movil, ausencia de desbordamiento de pagina y carga de fotografia.
-10. Carga de `/cuenta` con sesion ausente sin notificacion inesperada; layout en 1440 px y 390 px sin desbordamiento horizontal.
+
+Verificaciones con el contrato actual:
+
+1. En navegador, `/auth/me` sin sesion devuelve 401 silencioso y la disponibilidad publica carga; el formulario solicita ingresar y no muestra ID de cliente.
+2. Con rol cliente simulado en navegador, el formulario omite el ID y la tabla propia no muestra columna Cliente ni acciones.
+3. Pruebas HTTP aisladas con sesiones y repositorios temporales verifican propiedad, roles, origen confiable, sanitizacion publica, IDs internos existentes y conflictos.
 
 Los registros temporales de las pruebas se eliminaron al finalizar.
 
 ## Limites y recursos
 
-El backend guarda las reservas en memoria. Se incorporo autenticacion con registro, login, logout, sesion actual y creacion de empleados y administradores restringida a administradores. Las cuentas y perfiles de cliente persisten en un archivo local; las sesiones estan en memoria. Login/Register del frontend esta implementado; la adaptacion de turnos a la sesion y sus permisos sigue pendiente. No hay gestion publica de clientes, gimnasio, membresias, pagos, eventos o torneos.
+El backend guarda las reservas en memoria. La disponibilidad es publica y saneada; cada cliente consulta unicamente sus reservas y el personal puede gestionar el listado completo. La sesion determina el cliente al reservar; solo el personal puede editar o eliminar. Login/Register y la adaptacion de turnos a la sesion estan implementados. No hay gestion publica de clientes, gimnasio, membresias, pagos, eventos o torneos.
 
 Las consultas por WhatsApp se simularan para la entrega, sin numero real, enlaces externos ni mensajes enviados. Los paneles de empleado y administrador quedan para una etapa posterior. Contrato y pruebas de autenticacion: [backend/README.md](../backend/README.md).
 
-La comprobacion de superposicion del frontend mejora la experiencia, pero no impide reservas simultaneas entre distintos usuarios. El backend debe imponer esa regla antes de un uso real. Tampoco hay control de acceso para la gestion de turnos.
+La comprobacion de superposicion del frontend mejora la experiencia y el backend vuelve a validarla antes de crear o editar, para impedir conflictos concurrentes en esta instancia local. La persistencia de turnos sigue en memoria.
 
 Fotografia de referencia: [Unsplash, recurso utilizado](https://images.unsplash.com/photo-1459865264687-595d652de67e). No representa de forma verificada el establecimiento. Iconos: Lucide. Tipografias: Barlow y Barlow Condensed mediante Google Fonts, con alternativa sans-serif si no estan disponibles.
 

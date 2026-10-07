@@ -301,7 +301,7 @@ test("HTTP: rechaza origen externo o ausente, datos invalidos y elevacion de pri
     );
 });
 
-test("HTTP: limita intentos y no rompe el listado existente de turnos", async (context) => {
+test("HTTP: limita intentos, mantiene disponibilidad publica y protege turnos", async (context) => {
     const { request } = await httpFixture(context, 2);
     for (let index = 0; index < 2; index++)
         assert.equal(
@@ -313,9 +313,31 @@ test("HTTP: limita intentos y no rompe el listado existente de turnos", async (c
     assert.equal(limited.response.status, 429);
     assert.equal(limited.body.success, false);
     assert.ok(limited.response.headers.get("retry-after"));
-    const turnos = await request("/turnos");
-    assert.equal(turnos.response.status, 200);
-    assert.ok(Array.isArray(turnos.body.data));
+    const disponibilidad = await request("/turnos/disponibilidad");
+    assert.equal(disponibilidad.response.status, 200);
+    assert.ok(Array.isArray(disponibilidad.body.data));
+    assert.equal((await request("/turnos")).response.status, 401);
+});
+
+test("HTTP: la app liga sus turnos al servicio de autenticacion inyectado", async (context) => {
+    const { request } = await httpFixture(context);
+    const registered = await request("/auth/register", {
+        method: "POST",
+        data: clientData
+    });
+    const created = await request("/turnos", {
+        method: "POST",
+        cookie: registered.cookie,
+        data: {
+            fecha: "2099-12-31",
+            horaInicio: "20:00",
+            horaFin: "21:00",
+            cantidadJugadores: 10,
+            incluyeLuces: false
+        }
+    });
+    assert.equal(created.response.status, 201);
+    assert.equal(created.body.data.clienteId, registered.body.data.clienteId);
 });
 
 test("el registro simultaneo con un mismo email crea una sola cuenta", async (context) => {

@@ -85,6 +85,10 @@ export class AuthService {
         if (!usuario) throw new UnauthorizedError();
         return this.publicUser(usuario);
     }
+
+    isClientId(id) {
+        return Boolean(this.repository.findClientById(id));
+    }
 }
 
 export default new AuthService();

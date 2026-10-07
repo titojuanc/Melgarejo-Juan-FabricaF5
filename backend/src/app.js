@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import session from "express-session";
-import routes from "./routes/index.js";
+import { createRoutes } from "./routes/index.js";
 import {
     errorHandler,
     routeNotFoundHandler
@@ -14,12 +14,20 @@ import {
 } from "./config/auth.js";
 import { createAuthRoutes } from "./routes/authRoutes.js";
 import authService from "./services/AuthService.js";
+import { TurnoService } from "./services/TurnoService.js";
+import turnoService from "./services/TurnoService.js";
 
 export function createApp({
     auth = authService,
+    turnos,
     authLimit = 20,
     sessionSecret = getSessionSecret()
 } = {}) {
+    const turnoApi =
+        turnos ||
+        (auth === authService
+            ? turnoService
+            : new TurnoService(undefined, auth));
     const app = express();
     app.disable("x-powered-by");
     app.use(cors({ origin: frontendOrigins, credentials: true }));
@@ -34,7 +42,7 @@ export function createApp({
         })
     );
     app.use("/auth", createAuthRoutes(auth, authLimit));
-    app.use(routes);
+    app.use(createRoutes(turnoApi, auth));
 
     app.use(routeNotFoundHandler);
     app.use(errorHandler);

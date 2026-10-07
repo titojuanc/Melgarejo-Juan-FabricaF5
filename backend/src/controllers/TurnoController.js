@@ -2,11 +2,31 @@ import turnoService from "../services/TurnoService.js";
 import { successResponse } from "../responses/ApiResponse.js";
 import { Messages } from "../enums/Messages.js";
 
-class TurnoController {
+export class TurnoController {
+    constructor(service = turnoService) {
+        this.service = service;
+    }
+
     getAll(req, res, next) {
         try {
-            const turnos = turnoService.getAll();
+            const turnos = this.service.getAll();
             return successResponse(res, turnos);
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    getAvailability(req, res, next) {
+        try {
+            return successResponse(res, this.service.getAvailability());
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    getMine(req, res, next) {
+        try {
+            return successResponse(res, this.service.getMine(req.user.clienteId));
         } catch (error) {
             next(error);
         }
@@ -15,7 +35,7 @@ class TurnoController {
     getById(req, res, next) {
         try {
             const id = Number(req.params.id);
-            const turno = turnoService.getById(id);
+            const turno = this.service.getById(id);
             return successResponse(res, turno);
         } catch (error) {
             next(error);
@@ -24,7 +44,7 @@ class TurnoController {
 
     create(req, res, next) {
         try {
-            const turno = turnoService.create(req.body);
+            const turno = this.service.create(req.body, req.user);
             return successResponse(res, turno, 201);
         } catch (error) {
             next(error);
@@ -34,7 +54,7 @@ class TurnoController {
     update(req, res, next) {
         try {
             const id = Number(req.params.id);
-            const turno = turnoService.update(id, req.body);
+            const turno = this.service.update(id, req.body);
             return successResponse(res, turno);
         } catch (error) {
             next(error);
@@ -44,7 +64,7 @@ class TurnoController {
     delete(req, res, next) {
         try {
             const id = Number(req.params.id);
-            turnoService.delete(id);
+            this.service.delete(id);
             return successResponse(res, { message: Messages.TURNO_DELETED });
         } catch (error) {
             next(error);

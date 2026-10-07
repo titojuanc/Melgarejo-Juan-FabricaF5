@@ -134,11 +134,11 @@ Las cuentas y los perfiles de cliente persisten en `backend/data/auth.json`, exc
 
 Los POST de autenticacion exigen un `Origin` autorizado. Registro y login comparten un limite de 20 solicitudes por IP cada 15 minutos. Los middlewares [de autenticacion y roles](../backend/src/middlewares/auth.js) estan disponibles para los siguientes modulos.
 
-### Turnos: pendiente de adaptar
+### Turnos: adaptados a la sesion
 
-La API existente permite listado, consulta, alta, actualizacion y eliminacion, pero todavia no aplica autenticacion, propiedad de registros ni superposicion del lado del servidor. La actualizacion usa asignacion directa de propiedades y debe reemplazarse por campos permitidos y validacion cuando se integre la sesion.
+`GET /turnos/disponibilidad` publica solo fecha, horario y estado; no incluye ID de turno ni cliente. `GET /turnos/mis` requiere un cliente autenticado y filtra por su `clienteId` de sesion. El listado completo y la consulta individual requieren rol `empleado` o `admin`. Crear requiere sesion; para clientes el servidor ignora el ID enviado y toma el del usuario autenticado. El personal solo puede asignar reservas a perfiles de cliente existentes. Actualizar y eliminar requieren personal y origen permitido.
 
-No considerar esas rutas listas para produccion. No protegerlas aisladamente sin actualizar el frontend, porque romperia el flujo actual.
+La grilla consume disponibilidad publica. Los clientes ven solo sus reservas y no tienen acciones de edicion o cancelacion; el personal conserva el listado y CRUD. El backend valida fecha real y futura, horas, cantidad, ID de cliente y superposicion; las actualizaciones aceptan unicamente campos permitidos. Las pruebas usan sesiones, archivos y repositorios temporales.
 
 ## 5. Plan por etapas
 
@@ -147,7 +147,7 @@ No considerar esas rutas listas para produccion. No protegerlas aisladamente sin
 | Definir autenticacion y permisos         | Completada | Registro cliente, login comun y alta interna solo admin.                      |
 | Implementar autenticacion backend        | Completada | Endpoints, sesion, persistencia simple y diez pruebas.                        |
 | Integrar Login/Register de Figma         | Completada | Formularios reales, recuperacion de sesion y logout.                          |
-| Adaptar turnos y permisos                | Pendiente  | Cliente desde sesion, datos propios, disponibilidad sin informacion personal. |
+| Adaptar turnos y permisos                | Completada | Cliente desde sesion, datos propios, disponibilidad sin informacion personal. |
 | Completar contratos y endpoints publicos | Pendiente  | Informacion de Gym, paquetes de Cumpleanos, torneos y detalle de fixture.     |
 | Recrear las demas pantallas              | Pendiente  | Composicion y recursos de Figma, formularios mock y servicios reales.         |
 | Verificar y documentar entrega completa  | Pendiente  | Pruebas, accesibilidad, responsive y contraste con las consignas.             |
@@ -158,16 +158,9 @@ Se inspecciono el frame 1-4. La ruta `/cuenta` conserva login y registro en pane
 
 La prueba de servicios cubre rutas, cookies, cuerpos, sesion ausente y errores. Las pruebas del backend cubren el ciclo HTTP de registro, recuperacion, login y logout. Se verifico el layout a 1440 px y 390 px. No se construyeron paneles internos.
 
-### Siguiente tarea concreta: adaptar turnos y permisos
+### Siguiente tarea concreta: completar contratos publicos
 
-### Adaptacion de turnos
-
-- El cliente no escribe su ID: el servidor lo obtiene de la sesion, sin confiar en uno enviado por el navegador.
-- Separar disponibilidad publica de listado privado; no publicar clientes ni datos personales en la grilla.
-- Definir acceso a las reservas propias y restringir las operaciones internas por rol.
-- Retirar del flujo cliente los botones de edicion o eliminacion que contradigan las reglas confirmadas; conservar las capacidades necesarias para la futura gestion interna.
-- Validar fechas, horarios y superposicion en el backend; no basta la validacion del formulario.
-- Resolver junto con el mock que representa una solicitud, que representa una reserva y cuando se ocupa la cancha.
+Revisar en Figma la composicion pendiente de Gym, Cumpleanos y Torneos antes de implementar catalogos o formularios. Definir contratos pequenos para la informacion publica y conectar los servicios; no inventar paquetes ni precios. El fixture y las estadisticas requieren reglas confirmadas y no deben exponer DNI. Mantener separados los futuros flujos internos de empleados/admin.
 
 ### Otros recursos
 
@@ -201,10 +194,10 @@ npm --prefix frontend run build
 
 Estado verificado al cerrar la implementacion:
 
-- Backend: diez pruebas de servicio, HTTP, sesiones, permisos, persistencia, duplicados simultaneos y bootstrap de admin pasaron.
-- Frontend: ocho pruebas de servicios y validacion, y compilacion de produccion pasaron con Login/Register.
+- Backend: trece pruebas de servicio, HTTP, sesiones, permisos de turnos, aislamiento de clientes, persistencia, duplicados simultaneos y bootstrap de admin pasaron.
+- Frontend: nueve pruebas de servicios y validacion, y compilacion de produccion pasaron con Login/Register y turnos por rol.
 - Se verificaron con navegador los flujos originales de crear, editar, cancelar eliminacion y eliminar turnos; errores de API, reintento, Escape, restauracion de foco, movil y carga de imagen.
-- API activa comprobada en navegador: `/auth/me` devuelve 401 sin sesion, tratado silenciosamente como visitante. No se crearon cuentas permanentes durante la verificacion.
+- API activa comprobada en navegador: `/auth/me` devuelve 401 sin sesion, tratado silenciosamente como visitante; disponibilidad carga y la pantalla solicita iniciar sesion antes de reservar. No se crearon cuentas permanentes durante la verificacion.
 
 Las pruebas de backend usan archivos temporales y puertos aleatorios. No depender de servidores que hayan quedado abiertos ni de datos locales de otra sesion.
 
@@ -216,7 +209,7 @@ El backend no carga `.env` automaticamente. Configurar variables antes de inicia
 
 ## 7. Riesgos y pendientes que no deben ocultarse
 
-- Login/Register y la sesion compartida ya existen; el ID manual y las rutas de turnos sin permisos aun son deuda conocida.
+- Login/Register y turnos por rol estan integrados. El formulario interno de personal conserva la asignacion manual de cliente, limitada a perfiles existentes.
 - No hay backend funcional de Gym, Cumpleanos o Torneos ni generador de fixture.
 - Cumpleanos y reservas comparten cancha; no validar su disponibilidad como recursos independientes al confirmar ocupaciones.
 - Persistencia de cuentas en archivo y sesiones en memoria son para una sola instancia local, no para produccion.
