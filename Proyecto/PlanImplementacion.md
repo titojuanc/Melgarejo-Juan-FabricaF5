@@ -1,6 +1,6 @@
 # Plan de implementacion y continuidad - Entrega 3
 
-Actualizado: 6 de octubre de 2026. Fecha de entrega indicada por el usuario: 9 de noviembre de 2026, 23:59.
+Actualizado: 7 de octubre de 2026. Fecha de entrega indicada por el usuario: 9 de noviembre de 2026, 23:59.
 
 Este documento permite retomar el proyecto sin acceder a la conversacion original. Distingue decisiones confirmadas, codigo implementado y trabajo pendiente. Las decisiones posteriores del usuario prevalecen sobre los supuestos iniciales de los otros documentos.
 
@@ -8,7 +8,9 @@ Este documento permite retomar el proyecto sin acceder a la conversacion origina
 
 Desarrollar el frontend React de La Fabrica Futbol 5 respetando el boceto original e integrandolo con la API Express. La entrega se centra en el frontend: no ampliar innecesariamente la base de datos ni construir un sistema productivo completo.
 
-Trabajar paso a paso. El backend de autenticacion ya esta implementado; el siguiente paso acordado es Login/Register del frontend y su conexion con la sesion. No implementar todos los modulos ni los paneles internos de una sola vez sin acordar el avance con el usuario.
+Trabajar paso a paso, una etapa verificable por vez. Al terminar cada etapa, ejecutar sus pruebas y build pertinentes, revisar el diff, crear un commit separado y hacer push a `origin/main`. No incluir datos locales, secretos, dependencias instaladas ni artefactos generados. Si el push falla, informar el commit y el motivo; no marcar la etapa como publicada.
+
+No implementar todos los modulos ni los paneles internos de una sola vez sin acordar el avance con el usuario.
 
 Requisitos de la consigna:
 
@@ -23,7 +25,7 @@ Requisitos de la consigna:
 ## 2. Fuentes de informacion
 
 - [Entrega 1](Entrega1.md): dominio inicial; contiene secciones incompletas y reglas aun no implementadas.
-- [Analisis del sistema](La_Fabrica_F5_Analisis_Sistema.docx): documento existente del negocio. Revisarlo al retomar cada modulo; su contenido no fue extraido ni verificado durante esta sesion.
+- [Analisis del sistema](La_Fabrica_F5_Analisis_Sistema.docx): documento del negocio, revisado el 7 de octubre de 2026 al abordar los contratos publicos.
 - [Entrega 3](Entrega3.md): descripcion del frontend existente y sus limitaciones.
 - [Backend y autenticacion](../backend/README.md): contrato HTTP, configuracion y procedimiento local para crear el primer administrador.
 - [README general](../README.md): instalacion y ejecucion.
@@ -39,6 +41,8 @@ Si el editor falla al mostrar el canvas, el modo presentacion permitio inspeccio
 - [Login/Register, frame 1-4](https://www.figma.com/proto/BzSyxA0BZY462Cntvvr5Dr/La-Fabrica-Futbol-5---Wireframe-Web?node-id=1-4&scaling=scale-down-width).
 
 Estos enlaces son referencias reproducibles; no depender de los identificadores de pestanas de un navegador de otra sesion. Si un recurso no puede leerse, pedir una captura o exportacion antes de reconstruirlo.
+
+Al revisar el siguiente paso, la vista de diseno de Figma informo que WebGL no esta soportado. El prototipo permite ver Login/Register, pero no se pudieron extraer los frames de Gym, Cumpleanos ni Torneos ni sus hotspots; no usar nombres de paquetes, precios, horarios o fixture supuestos. Para completar esos contratos con fidelidad hace falta una captura/exportacion de esos tres frames o acceso al canvas de Figma.
 
 ## 3. Respuestas del usuario a las dudas
 
@@ -75,6 +79,8 @@ El empleado maneja los torneos activos y carga resultados y estadisticas. En un 
 El torneo debera generar su estructura segun la cantidad de equipos definida y el formato elegido, por ejemplo liga o copa. Las variantes exactas, reglas de puntuacion, desempates, cruces y manejo de cantidades impares no estan definidas: precisarlas al abordar el generador. Preferir una biblioteca adecuada para el motor si existe, en lugar de inventar reglas.
 
 No exponer DNI en endpoints publicos, fixtures o estadisticas visibles a clientes. La carga de equipos, jugadores y resultados sera privada y autorizada para el personal. La inscripcion no es un autoservicio publico dentro del sitio.
+
+El analisis funcional tambien pide sena antes de confirmar, recargo por luces, anticipacion minima de 48 horas para eventos y controles de membresia vencida. En esta entrega prevalecen las decisiones posteriores del usuario: no hay cobros ni comprobantes online, WhatsApp es mock, Gym no tiene turnos reservables y no se debe inventar una penalizacion o tarifa. No activar esas reglas operativas sin cerrar primero el flujo y sus datos.
 
 ### Pagos y cancelaciones
 
@@ -158,9 +164,11 @@ Se inspecciono el frame 1-4. La ruta `/cuenta` conserva login y registro en pane
 
 La prueba de servicios cubre rutas, cookies, cuerpos, sesion ausente y errores. Las pruebas del backend cubren el ciclo HTTP de registro, recuperacion, login y logout. Se verifico el layout a 1440 px y 390 px. No se construyeron paneles internos.
 
-### Siguiente tarea concreta: completar contratos publicos
+### Siguiente tarea concreta: completar contratos publicos (bloqueada por recursos)
 
 Revisar en Figma la composicion pendiente de Gym, Cumpleanos y Torneos antes de implementar catalogos o formularios. Definir contratos pequenos para la informacion publica y conectar los servicios; no inventar paquetes ni precios. El fixture y las estadisticas requieren reglas confirmadas y no deben exponer DNI. Mantener separados los futuros flujos internos de empleados/admin.
+
+La lectura del DOCX solo confirma una membresia, control de vencimiento, cumpleanos como evento de cancha y torneos con equipos; no contiene paquetes, precios, horarios del gimnasio ni datos reales de torneos. No se agregaron endpoints vacios ni catalogos ficticios: pedir las capturas/exportaciones faltantes y luego completar cada recurso como etapa verificable con commit y push.
 
 ### Otros recursos
 
