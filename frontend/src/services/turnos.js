@@ -1,4 +1,4 @@
-const API_URL = (
+export const API_URL = (
     import.meta.env?.VITE_API_URL || "http://localhost:3000"
 ).replace(/\/$/, "");
 
@@ -7,6 +7,7 @@ async function request(path = "", options = {}) {
     try {
         response = await fetch(`${API_URL}/turnos${path}`, {
             ...options,
+            credentials: "include",
             headers: { "Content-Type": "application/json", ...options.headers },
         });
     } catch (error) {

@@ -146,22 +146,19 @@ No considerar esas rutas listas para produccion. No protegerlas aisladamente sin
 | ---------------------------------------- | ---------- | ----------------------------------------------------------------------------- |
 | Definir autenticacion y permisos         | Completada | Registro cliente, login comun y alta interna solo admin.                      |
 | Implementar autenticacion backend        | Completada | Endpoints, sesion, persistencia simple y diez pruebas.                        |
-| Integrar Login/Register de Figma         | Siguiente  | Formularios reales, recuperacion de sesion y logout.                          |
+| Integrar Login/Register de Figma         | Completada | Formularios reales, recuperacion de sesion y logout.                          |
 | Adaptar turnos y permisos                | Pendiente  | Cliente desde sesion, datos propios, disponibilidad sin informacion personal. |
 | Completar contratos y endpoints publicos | Pendiente  | Informacion de Gym, paquetes de Cumpleanos, torneos y detalle de fixture.     |
 | Recrear las demas pantallas              | Pendiente  | Composicion y recursos de Figma, formularios mock y servicios reales.         |
 | Verificar y documentar entrega completa  | Pendiente  | Pruebas, accesibilidad, responsive y contraste con las consignas.             |
 
-### Siguiente tarea concreta: Login/Register
+### Login/Register implementado
 
-1. Revisar el frame 1-4 antes de editar; conservar el diseno y sus campos.
-2. Incorporar un servicio de autenticacion y estado compartido de usuario siguiendo los patrones existentes.
-3. Recuperar sesion mediante `/auth/me` al iniciar; un 401 inicial significa visitante, no una notificacion de error inesperada.
-4. Implementar registro, login, logout, carga y validaciones con el sistema compartido de notificaciones.
-5. Utilizar `credentials: "include"` en todas las peticiones que participen de la sesion. No guardar contrasenas ni simular roles en localStorage.
-6. Ajustar la URL de API y el hostname para que funcionen las cookies.
-7. Incorporar navegacion de cuenta sin construir paneles de empleado o admin. Los clientes registrados pasan al flujo publico, no a una administracion general de turnos.
-8. Probar registro, login, recarga con sesion, logout y errores; revisar escritorio y movil contra Figma.
+Se inspecciono el frame 1-4. La ruta `/cuenta` conserva login y registro en paneles paralelos y se adapta a una columna en movil. El registro publico envia nombre, apellido, telefono, email, contrasena y equipo opcional; el backend asigna el rol cliente. El proveedor recupera `/auth/me`; un 401 inicial se interpreta como visitante. Login, registro, logout y llamadas de turnos incluyen credenciales de cookie. No se guardan contrasenas ni roles en `localStorage`. Vite y la API usan `localhost` para que `SameSite=Lax` funcione en desarrollo.
+
+La prueba de servicios cubre rutas, cookies, cuerpos, sesion ausente y errores. Las pruebas del backend cubren el ciclo HTTP de registro, recuperacion, login y logout. Se verifico el layout a 1440 px y 390 px. No se construyeron paneles internos.
+
+### Siguiente tarea concreta: adaptar turnos y permisos
 
 ### Adaptacion de turnos
 
@@ -205,23 +202,21 @@ npm --prefix frontend run build
 Estado verificado al cerrar la implementacion:
 
 - Backend: diez pruebas de servicio, HTTP, sesiones, permisos, persistencia, duplicados simultaneos y bootstrap de admin pasaron.
-- Frontend: seis pruebas de servicios y validacion, y compilacion de produccion pasaron antes de implementar autenticacion backend.
+- Frontend: ocho pruebas de servicios y validacion, y compilacion de produccion pasaron con Login/Register.
 - Se verificaron con navegador los flujos originales de crear, editar, cancelar eliminacion y eliminar turnos; errores de API, reintento, Escape, restauracion de foco, movil y carga de imagen.
-- API activa comprobada: `/auth/me` devuelve 401 sin sesion; `/turnos` devuelve 200. No se crearon cuentas permanentes con las pruebas.
+- API activa comprobada en navegador: `/auth/me` devuelve 401 sin sesion, tratado silenciosamente como visitante. No se crearon cuentas permanentes durante la verificacion.
 
 Las pruebas de backend usan archivos temporales y puertos aleatorios. No depender de servidores que hayan quedado abiertos ni de datos locales de otra sesion.
 
 ### Advertencia importante sobre las cookies
 
-El frontend se inicio en `http://127.0.0.1:5173`, pero su servicio actual usa por defecto `http://localhost:3000`. Esa combinacion funciono para turnos sin sesion, pero no debe mantenerse para autenticacion SameSite=Lax.
-
-Usar ambos con `localhost` o ambos con `127.0.0.1`. `VITE_API_URL` configura la base del backend y Vite debe reiniciarse si cambia su entorno. El backend permite ambos hosts en 5173/5174 por defecto y requiere `credentials: true` en CORS, ya configurado.
+El desarrollo y la vista previa de Vite ahora usan `localhost`, igual que la URL predeterminada de la API (`http://localhost:3000`), para que la cookie `SameSite=Lax` funcione. `VITE_API_URL` configura la base del backend y Vite debe reiniciarse si cambia su entorno. El backend permite los hosts locales en 5173/5174 y requiere `credentials: true` en CORS, ya configurado.
 
 El backend no carga `.env` automaticamente. Configurar variables antes de iniciar el proceso; consultar [backend/README.md](../backend/README.md) para `SESSION_SECRET`, `FRONTEND_ORIGIN`, `AUTH_DATA_FILE` y el primer admin.
 
 ## 7. Riesgos y pendientes que no deben ocultarse
 
-- La interfaz de autenticacion todavia no existe; el ID manual y las rutas de turnos sin permisos aun son deuda conocida.
+- Login/Register y la sesion compartida ya existen; el ID manual y las rutas de turnos sin permisos aun son deuda conocida.
 - No hay backend funcional de Gym, Cumpleanos o Torneos ni generador de fixture.
 - Cumpleanos y reservas comparten cancha; no validar su disponibilidad como recursos independientes al confirmar ocupaciones.
 - Persistencia de cuentas en archivo y sesiones en memoria son para una sola instancia local, no para produccion.

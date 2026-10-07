@@ -1,6 +1,9 @@
 import { NavLink } from "react-router-dom";
-import { CalendarDays, Menu, X } from "lucide-react";
+import { CalendarDays, LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "./AuthProvider.jsx";
+import { useNotifications } from "./Notifications.jsx";
 
 const links = [
     ["/inicio", "Home"],
@@ -14,6 +17,18 @@ const links = [
 
 export default function Layout({ children }) {
     const [open, setOpen] = useState(false);
+    const { user, logout } = useAuth();
+    const { notify } = useNotifications();
+
+    async function signOut() {
+        try {
+            await logout();
+            notify("Sesion cerrada correctamente.");
+        } catch (error) {
+            notify(error.message, "error");
+        }
+    }
+
     return (
         <>
             <a className="skip-link" href="#main-content">
@@ -57,6 +72,20 @@ export default function Layout({ children }) {
                                 {label}
                             </NavLink>
                         ))}
+                        {user ? (
+                            <>
+                                <Link to="/cuenta" onClick={() => setOpen(false)}>
+                                    {user.nombre}
+                                </Link>
+                                <button className="nav-logout" onClick={signOut}>
+                                    <LogOut size={16} /> Cerrar sesion
+                                </button>
+                            </>
+                        ) : (
+                            <NavLink to="/cuenta" onClick={() => setOpen(false)}>
+                                Ingresar
+                            </NavLink>
+                        )}
                     </nav>
                 </div>
             </header>

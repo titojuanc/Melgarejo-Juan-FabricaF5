@@ -14,6 +14,7 @@ test("los servicios respetan las rutas, metodos y formato de la API", async (con
     await updateTurno(1, turno);
     await deleteTurno(1);
     assert.equal(calls[0].url, "http://localhost:3000/turnos");
+    assert.equal(calls[0].credentials, "include");
     assert.equal(calls[1].method, "POST");
     assert.deepEqual(JSON.parse(calls[1].body), turno);
     assert.equal(calls[2].url, "http://localhost:3000/turnos/1");

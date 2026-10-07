@@ -12,6 +12,8 @@ Interfaz React para La Fabrica Futbol 5, integrada con la API Express de turnos 
 | `frontend/src/components`         | Layout, calendario semanal, formulario de turnos, dialogo, carga, notificaciones y estado compartido de turnos. |
 | `frontend/src/pages`              | Reserva, gestion de turnos, Home y secciones informativas.                                                      |
 | `frontend/src/services/turnos.js` | URL configurable, peticiones HTTP, interpretacion de respuestas y errores.                                      |
+| `frontend/src/services/auth.js`   | Login, registro, sesion actual, logout y manejo comun de errores HTTP.                                          |
+| `frontend/src/components/AuthProvider.jsx` | Estado compartido de usuario y recuperacion inicial de sesion.                                         |
 | `frontend/src/utils`              | Fechas locales, semana, horarios, superposicion y validaciones.                                                 |
 | `frontend/src/styles`             | Estilos generales, responsive y estados visuales.                                                               |
 | `frontend/src/App.jsx`            | Rutas y organizacion general.                                                                                   |
@@ -33,7 +35,7 @@ Se verifico visualmente la pantalla "03 - Reservar Cancha" en la presentacion de
 - Vista de turnos para busqueda, filtro, edicion y eliminacion, completando las operaciones existentes.
 - Adaptacion movil: menu expandible, panel apilado y desplazamiento interno de las tablas.
 - Importe "A confirmar": no se replica el precio del boceto porque no existe calculo de tarifas en la API.
-- No se muestra un usuario autenticado ficticio: la API de autenticacion ya existe, pero Login/Register del frontend sigue pendiente.
+- Login/Register utiliza la API de autenticacion, restaura la sesion al iniciar y ofrece cierre de sesion desde la navegacion. El registro publico crea clientes; no permite elegir roles internos.
 
 Las restantes secciones del boceto mantienen enlaces de navegacion, pero no se presentan como funcionalidades implementadas. Su composicion visual completa y las ilustraciones originales quedan pendientes de acceso a los recursos correspondientes y de los endpoints necesarios.
 
@@ -65,7 +67,9 @@ Las notificaciones se colocan dentro del dialogo activo para no quedar ocultas d
 | Editar    | `PUT /turnos/:id`    |
 | Eliminar  | `DELETE /turnos/:id` |
 
-El servicio centralizado procesa `{ success, data }` y lanza errores ante fallos HTTP, JSON invalido o falta de conexion. Los componentes no realizan `fetch` directamente. La URL base es configurable con `VITE_API_URL`.
+Los servicios centralizados procesan `{ success, data }` y lanzan errores ante fallos HTTP, JSON invalido o falta de conexion. Las peticiones incluyen credenciales de cookie. Un `401` inicial de `/auth/me` indica visitante y no genera una notificacion. Los componentes no realizan `fetch` directamente. La URL base es configurable con `VITE_API_URL`; Vite y la API usan `localhost` para compartir el host de la cookie.
+
+`/cuenta` reproduce los formularios de ingreso y registro del frame 1-4. El registro publico valida los campos del contrato de API y deja equipo como opcional. Al iniciar sesion o registrarse, la navegacion vuelve al flujo publico de reserva; el encabezado muestra la cuenta y permite cerrar sesion. No se almacena la contrasena ni se construyen paneles internos.
 
 La creacion envia fecha, inicio, fin, cantidad de jugadores, luces e ID de cliente. El estado inicial "Pendiente" lo decide el backend. El frontend conserva el estado existente al editar; no simula confirmaciones de pago.
 
@@ -73,7 +77,7 @@ Se agrego CORS al backend para la comunicacion entre puertos locales. No se modi
 
 ## Pruebas
 
-`npm --prefix frontend test`: seis pruebas automaticas del servicio HTTP, fechas locales y validaciones.
+`npm --prefix frontend test`: ocho pruebas automaticas de autenticacion, servicio HTTP, fechas locales y validaciones.
 
 `npm --prefix frontend run build`: compilacion de produccion, incluyendo la fotografia en el bundle.
 
@@ -88,12 +92,13 @@ Flujos verificados con navegador automatizado contra Express:
 7. Error visible dentro de un dialogo de edicion.
 8. Escape y restauracion del foco al boton que abrio el dialogo.
 9. Navegacion movil, ausencia de desbordamiento de pagina y carga de fotografia.
+10. Carga de `/cuenta` con sesion ausente sin notificacion inesperada; layout en 1440 px y 390 px sin desbordamiento horizontal.
 
 Los registros temporales de las pruebas se eliminaron al finalizar.
 
 ## Limites y recursos
 
-El backend guarda las reservas en memoria. Se incorporo autenticacion con registro, login, logout, sesion actual y creacion de empleados y administradores restringida a administradores. Las cuentas y perfiles de cliente persisten en un archivo local; las sesiones estan en memoria. Login/Register del frontend y la adaptacion de turnos a la sesion quedan pendientes del siguiente paso. No hay gestion publica de clientes, gimnasio, membresias, pagos, eventos o torneos.
+El backend guarda las reservas en memoria. Se incorporo autenticacion con registro, login, logout, sesion actual y creacion de empleados y administradores restringida a administradores. Las cuentas y perfiles de cliente persisten en un archivo local; las sesiones estan en memoria. Login/Register del frontend esta implementado; la adaptacion de turnos a la sesion y sus permisos sigue pendiente. No hay gestion publica de clientes, gimnasio, membresias, pagos, eventos o torneos.
 
 Las consultas por WhatsApp se simularan para la entrega, sin numero real, enlaces externos ni mensajes enviados. Los paneles de empleado y administrador quedan para una etapa posterior. Contrato y pruebas de autenticacion: [backend/README.md](../backend/README.md).
 

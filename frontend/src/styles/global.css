@@ -463,6 +463,67 @@ main {
 .reservation-panel .field-error {
     color: #ffb7a9;
 }
+.account-page {
+    max-width: 1060px;
+}
+.account-forms {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 32px;
+    align-items: center;
+}
+.account-card {
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: #fff;
+    padding: 28px;
+}
+.account-card .eyebrow {
+    margin-bottom: 8px;
+}
+.account-card h1,
+.account-card h2 {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 30px;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+.account-intro {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 18px;
+}
+.account-card fieldset {
+    display: grid;
+    gap: 2px;
+}
+.account-card .button {
+    width: 100%;
+    text-transform: uppercase;
+}
+.account-submit {
+    background: #e79445;
+    color: #20221f;
+}
+.account-submit:hover:not(:disabled) {
+    background: #d77d2d;
+}
+.nav-logout {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 40px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #d9ddd5;
+    font: inherit;
+    font-size: 14px;
+    white-space: nowrap;
+}
+.nav-logout:hover {
+    color: #fff;
+}
 .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -825,6 +886,15 @@ main {
     }
 }
 @media (max-width: 850px) {
+    .account-forms {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    .login-card {
+        max-width: 600px;
+        width: 100%;
+        justify-self: center;
+    }
     .reservation-layout {
         grid-template-columns: 1fr;
     }
@@ -863,6 +933,9 @@ main {
     }
     nav a {
         font-size: 14px;
+        padding: 12px 0;
+    }
+    .nav-logout {
         padding: 12px 0;
     }
     .notifications {
@@ -914,6 +987,9 @@ main {
     }
     .reservation-panel {
         padding: 24px 20px;
+    }
+    .account-card {
+        padding: 22px 18px;
     }
     .reservation-panel .turno-form fieldset {
         display: block;
