@@ -182,7 +182,27 @@ Verificado con 11 pruebas frontend, build de produccion y navegador a 1440 px y 
 
 ### Siguiente tarea concreta: backend de empleado/admin
 
-Una vez terminado el frontend publico, definir los contratos y operaciones internas que requieran las vistas de empleado y administrador. Acordar permisos concretos antes de ampliar endpoints: empleado gestiona lo operativo y admin tiene permisos adicionales. Incluir solo datos y flujos necesarios, sin pagos online ni mensajes reales de WhatsApp. Confirmar antes las reglas aun abiertas de pagos, membresias/asistencia y torneos.
+#### Punto de reanudacion
+
+Estado al 7 de octubre de 2026: frontend publico conectado y publicado en `origin/main`, commit `6119a48` (`Implementa frontend publico conectado`). El arbol estaba limpio al cerrar. Pasaron 11 pruebas frontend y `npm --prefix frontend run build`; Home, Gym, Cumpleanos, Torneos y Nosotros se comprobaron en navegador en escritorio y movil.
+
+La API ya existente incluye autenticacion (`/auth/*`), turnos por rol (`/turnos/*`) y lectura publica/consulta simulada (`/gym`, `/cumpleanos/*`, `/torneos/*`). No duplicar estos recursos ni cambiar sus contratos sin necesidad. La disponibilidad de turnos es publica y saneada; crear requiere sesion; clientes solo consultan sus turnos; empleado/admin acceden al CRUD. La consulta de Cumpleanos requiere cliente, pero es simulada, no se guarda y no bloquea cancha.
+
+Archivos de entrada para el siguiente agente: [middlewares/auth.js](../backend/src/middlewares/auth.js), [routes/turnoRoutes.js](../backend/src/routes/turnoRoutes.js), [services/TurnoService.js](../backend/src/services/TurnoService.js), [services/AuthService.js](../backend/src/services/AuthService.js), [services/PublicInfoService.js](../backend/src/services/PublicInfoService.js), [backend README](../backend/README.md) y el analisis funcional de la seccion 2 de este plan.
+
+#### Orden de trabajo
+
+1. Antes de crear endpoints internos, acordar una matriz de permisos para cliente, empleado y admin, y los flujos que realmente se incluiran.
+2. Implementar primero el backend interno: contratos, validaciones, autorizacion por rol y persistencia simple compatible con la entrega. Agregar pruebas HTTP aisladas; no tocar el frontend interno hasta estabilizar estos contratos.
+3. Ejecutar pruebas backend y revisar el diff; crear un commit separado y hacer push a `origin/main`.
+4. Despues construir el frontend interno consumiendo esos contratos, mostrar acciones segun la sesion real, y validar ambos roles en navegador.
+5. Ejecutar pruebas frontend, build y revision responsive; publicar esa etapa con su propio commit/push.
+
+#### Limites y decisiones pendientes
+
+Empleado y admin tendran capacidades distintas; no asumir que empleado puede administrar usuarios, precios o configuracion. El endpoint `POST /auth/users` ya permite al admin crear cuentas internas. Candidatos operativos indicados por el analisis: confirmacion/reprogramacion/cancelacion de turnos, registrar pagos recibidos fuera de la web, asistencia presencial de Gym y carga manual de torneos. Confirmar con el usuario cuales entran en esta entrega antes de implementarlos.
+
+No hay cobro online ni envio real de WhatsApp. La membresia es unica, pero todavia no existe un registro operativo de socios/cuotas/asistencias. Las reglas de seña, penalizacion por cancelar con menos de 24 h y recargo por luces no tienen contrato ni calculo acordados. Los torneos no tienen formato, desempates ni reglas de cantidades impares definidos; no generar fixtures hasta confirmarlos. DNI puede manejarse en futuras operaciones privadas, pero nunca debe exponerse en endpoints o vistas publicas.
 
 ### Etapa siguiente: frontend de empleado/admin
 
