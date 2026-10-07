@@ -157,7 +157,9 @@ La grilla consume disponibilidad publica. Los clientes ven solo sus reservas y n
 | Integrar Login/Register de Figma         | Completada | Formularios reales, recuperacion de sesion y logout.                          |
 | Adaptar turnos y permisos                | Completada | Cliente desde sesion, datos propios, disponibilidad sin informacion personal. |
 | Completar contratos y endpoints publicos | Completada | Horarios destacados, paquetes y torneos de referencia; mock sin bloqueo.      |
-| Recrear las demas pantallas              | Pendiente  | Composicion y recursos de Figma, formularios mock y servicios reales.         |
+| Completar frontend publico conectado    | Siguiente  | Home, Gym, Cumpleanos, Torneos y Nosotros con servicios existentes.           |
+| Implementar backend interno por rol      | Pendiente  | Operaciones, permisos y datos necesarios para empleado/admin.                  |
+| Implementar frontend interno por rol     | Pendiente  | Vistas de empleado/admin conectadas al backend y diferenciadas por rol.        |
 | Verificar y documentar entrega completa  | Pendiente  | Pruebas, accesibilidad, responsive y contraste con las consignas.             |
 
 ### Login/Register implementado
@@ -172,11 +174,21 @@ La prueba de servicios cubre rutas, cookies, cuerpos, sesion ausente y errores. 
 
 `GET /torneos` y `GET /torneos/:id` entregan los conteos, estados y tabla parcial visibles en la captura, marcados `datosDeReferencia: true`. No exponen DNI ni inventan fixture, fechas o resultados. El prototipo no provee un horario completo de Gym ni fixture verificable.
 
-### Siguiente tarea concreta: recrear las pantallas de referencia
+### Siguiente tarea concreta: completar el frontend publico conectado
 
-Implementar Home, Gym, Cumpleanos, Torneos y Sobre Nosotros contrastando las capturas de `Proyecto/imagenes_referencia`. Consumir los endpoints desde servicios centralizados. Mantener claros los datos referenciales de torneos, no agregar precios y presentar cualquier consulta simulada como no confirmada.
+Implementar Home, Gym, Cumpleanos, Torneos y Sobre Nosotros contrastando las capturas de `Proyecto/imagenes_referencia`. Consumir los endpoints existentes desde servicios centralizados. Mantener claros los datos referenciales de torneos, no agregar precios y presentar cualquier consulta simulada como no confirmada. Para fixture, resultados y estadisticas aun no disponibles, mostrar un estado vacio honesto, sin generar datos de ejemplo adicionales.
 
-La carga de resultados reales, fixture, membresias, pagos y asistencias requiere el futuro flujo interno y datos reales. No generar cruces hasta confirmar formato, desempates y manejo de cantidades impares. Los paneles internos siguen fuera del alcance inmediato.
+Cerrar esta etapa con pruebas, build y revision visual; despues crear su commit y push separado segun la regla del proyecto.
+
+### Etapa posterior: backend de empleado/admin
+
+Una vez terminado el frontend publico, definir los contratos y operaciones internas que requieran las vistas de empleado y administrador. Acordar permisos concretos antes de ampliar endpoints: empleado gestiona lo operativo y admin tiene permisos adicionales. Incluir solo datos y flujos necesarios, sin pagos online ni mensajes reales de WhatsApp. Confirmar antes las reglas aun abiertas de pagos, membresias/asistencia y torneos.
+
+### Etapa siguiente: frontend de empleado/admin
+
+Implementar las vistas internas contra el backend ya definido y mostrar acciones segun el rol real de la sesion. Verificar permisos y flujos de extremo a extremo, y publicar la etapa con un commit/push separado.
+
+La carga de resultados reales, fixture, membresias, pagos y asistencias requiere el futuro flujo interno y datos reales. No generar cruces hasta confirmar formato, desempates y manejo de cantidades impares.
 
 ## 6. Ejecucion y comprobaciones
 
@@ -219,12 +231,12 @@ El backend no carga `.env` automaticamente. Configurar variables antes de inicia
 
 ## 7. Riesgos y pendientes que no deben ocultarse
 
-- Login/Register y turnos por rol estan integrados. El formulario interno de personal conserva la asignacion manual de cliente, limitada a perfiles existentes.
-- Los endpoints públicos de referencia existen; siguen pendientes UI, horario completo de Gym, datos operativos de membresía, fixture/resultados reales y generación de torneos.
+- Login/Register y turnos por rol estan integrados. La prioridad inmediata es el frontend publico conectado a los endpoints existentes; despues se implementaran backend y frontend internos de empleado/admin, en ese orden.
+- Siguen pendientes el horario completo de Gym, datos operativos de membresia, fixture/resultados reales y generacion de torneos.
 - Cumpleanos y reservas comparten cancha; no validar su disponibilidad como recursos independientes al confirmar ocupaciones.
 - Persistencia de cuentas en archivo y sesiones en memoria son para una sola instancia local, no para produccion.
 - No se implementaron recuperacion de contrasena ni verificacion de email; no prometidas para este paso.
 - La instalacion reporto tres alertas altas en dependencias de desarrollo de nodemon. No se ejecuto una actualizacion forzada incompatible; revisar por separado.
-- Faltan fidelidad visual de todas las pantallas, recursos originales y una verificacion final de las tres partes de la consigna. Pruebas exitosas no equivalen a cumplimiento visual completo.
+- Faltan fidelidad visual de las pantallas y una verificacion final de las tres partes de la consigna. Pruebas exitosas no equivalen a cumplimiento visual completo.
 
 Al retomar, leer los archivos actuales antes de editar, conservar cambios ajenos y verificar cada avance con la prueba mas pequena que pueda detectar un fallo. No inventar informacion del negocio ni presentar un mock como una operacion real.
