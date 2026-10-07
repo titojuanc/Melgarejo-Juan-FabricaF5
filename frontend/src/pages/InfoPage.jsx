@@ -1,69 +1,29 @@
 import { Link } from "react-router-dom";
-import {
-    ArrowRight,
-    Dumbbell,
-    PartyPopper,
-    Trophy,
-    MapPin,
-    CircleAlert,
-} from "lucide-react";
-
-const sections = {
-    gym: {
-        title: "GIMNASIO",
-        subtitle: "Tu entrenamiento, en La Fabrica.",
-        message: "Las reservas de gimnasio todavia no estan disponibles.",
-        Icon: Dumbbell,
-    },
-    cumpleanos: {
-        title: "CUMPLEANOS",
-        subtitle: "Un festejo con todo el equipo.",
-        message: "Las solicitudes de eventos todavia no estan disponibles.",
-        Icon: PartyPopper,
-    },
-    torneos: {
-        title: "TORNEOS",
-        subtitle: "La competencia se juega en equipo.",
-        message:
-            "La inscripcion de equipos requiere coordinacion con la administracion. Inscripciones en linea no disponibles.",
-        Icon: Trophy,
-    },
-    nosotros: {
-        title: "SOBRE NOSOTROS",
-        subtitle: "La Fabrica Futbol 5",
-        message:
-            "Un espacio para el futbol 5, el gimnasio, los eventos y los torneos.",
-        Icon: MapPin,
-    },
-    notFound: {
-        title: "PAGINA NO ENCONTRADA",
-        subtitle: "Este enlace no esta disponible.",
-        message: "La pagina solicitada no existe.",
-        Icon: CircleAlert,
-    },
-};
+import { ArrowRight, CircleAlert } from "lucide-react";
+import GymPage from "./GymPage.jsx";
+import BirthdayPage from "./BirthdayPage.jsx";
+import TorneosPage from "./TorneosPage.jsx";
+import NosotrosPage from "./NosotrosPage.jsx";
 
 export default function InfoPage({ section }) {
-    const { title, subtitle, message, Icon } = sections[section];
+    if (section === "gym") return <GymPage />;
+    if (section === "cumpleanos") return <BirthdayPage />;
+    if (section === "torneos") return <TorneosPage />;
+    if (section === "nosotros") return <NosotrosPage />;
+
     return (
-        <div className="page-container">
+        <div className="page-container public-page">
             <div className="page-heading">
                 <div>
                     <p className="eyebrow">LA FABRICA FUTBOL 5</p>
-                    <h1>{title}</h1>
-                    <p>{subtitle}</p>
+                    <h1>PÁGINA NO ENCONTRADA</h1>
+                    <p>Este enlace no está disponible.</p>
                 </div>
             </div>
             <section className="info-section">
-                <Icon size={44} />
-                <h2>
-                    {section === "nosotros"
-                        ? "Nos une el juego."
-                        : section === "notFound"
-                          ? "Volvamos a la cancha."
-                          : "Proximamente"}
-                </h2>
-                <p>{message}</p>
+                <CircleAlert size={44} />
+                <h2>Volvamos a la cancha.</h2>
+                <p>La página solicitada no existe.</p>
                 <Link className="button primary" to="/">
                     Reservar cancha <ArrowRight size={18} />
                 </Link>

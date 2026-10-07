@@ -840,6 +840,669 @@ main {
     color: var(--muted);
     max-width: 560px;
 }
+.public-page .page-heading {
+    margin-bottom: 28px;
+}
+.public-state {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 64px;
+    padding: 16px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+}
+.public-state p {
+    margin: 0;
+}
+.public-state.public-error {
+    justify-content: space-between;
+    color: #9b2c23;
+}
+.public-state.public-error .button {
+    color: var(--ink);
+}
+.home-page {
+    padding-top: 28px;
+}
+.home-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: 390px;
+    overflow: hidden;
+    background: #242721;
+    color: #fff;
+}
+.home-hero > img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 54%;
+    filter: brightness(0.52);
+}
+.home-hero::after {
+    position: absolute;
+    inset: 0;
+    content: "";
+    background: linear-gradient(90deg, #161914dd 0%, #1619149c 52%, #16191412 100%);
+}
+.home-hero-copy {
+    position: relative;
+    z-index: 1;
+    width: min(670px, 75%);
+    padding: 50px 44px;
+}
+.home-hero .eyebrow {
+    color: var(--yellow);
+}
+.home-hero h1 {
+    max-width: 660px;
+    margin: 0 0 14px;
+    font-size: 48px;
+}
+.home-hero-copy > p:not(.eyebrow) {
+    max-width: 490px;
+    color: #f0f1ed;
+    margin-bottom: 22px;
+}
+.hero-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.home-primary {
+    background: var(--yellow);
+    color: var(--ink);
+}
+.home-primary:hover:not(:disabled) {
+    background: #f8df83;
+}
+.home-secondary {
+    background: #fff;
+    color: var(--ink);
+}
+.photo-caption {
+    z-index: 1;
+}
+.home-services,
+.home-tournaments {
+    margin-top: 38px;
+}
+.section-heading {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 16px;
+}
+.section-heading .eyebrow {
+    margin-bottom: 6px;
+}
+.section-heading h2 {
+    margin-bottom: 0;
+    text-transform: uppercase;
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 25px;
+    font-weight: 800;
+}
+.service-links {
+    gap: 12px;
+    border: 0;
+    margin-top: 0;
+}
+.service-links .service-link {
+    display: flex;
+    min-width: 0;
+    min-height: 60px;
+    align-items: center;
+    gap: 10px;
+    padding: 16px;
+    border: 1px solid #181a17;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+}
+.service-links .service-link.green {
+    background: #147b43;
+}
+.service-links .service-link.orange {
+    background: #e58b3a;
+    color: var(--ink);
+}
+.service-links .service-link.yellow {
+    background: var(--yellow);
+    color: var(--ink);
+}
+.service-links .service-link.dark {
+    background: var(--ink);
+}
+.service-links .service-link svg:first-child {
+    color: inherit;
+}
+.service-links .service-link svg:last-child {
+    margin-left: auto;
+    color: inherit;
+}
+.service-links .service-link:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+}
+.home-tournament-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+.home-tournament {
+    display: grid;
+    gap: 8px;
+    padding: 16px;
+    border: 1px solid #8d887e;
+    border-radius: 8px;
+    background: #f7f2e9;
+    font-size: 13px;
+}
+.home-tournament:hover {
+    border-color: var(--green-dark);
+}
+.home-tournament > span:nth-child(2) {
+    color: var(--muted);
+    font-size: 12px;
+}
+.status-open {
+    color: #067843;
+    font-weight: 700;
+}
+.status-playing {
+    color: #b12d22;
+    font-weight: 700;
+}
+.reference-footnote,
+.tournament-contact-note {
+    margin: 12px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+.home-about {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 28px;
+    align-items: center;
+    margin-top: 44px;
+    padding-top: 28px;
+    border-top: 1px solid var(--line);
+}
+.home-about img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1.55;
+    object-fit: cover;
+}
+.home-about .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.home-about h2 {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+.home-about p:not(.eyebrow) {
+    max-width: 440px;
+    color: var(--muted);
+}
+.gym-overview {
+    display: grid;
+    grid-template-columns: minmax(270px, 0.85fr) minmax(0, 1.15fr);
+    gap: 22px;
+    align-items: stretch;
+}
+.gym-membership,
+.gym-schedule {
+    padding: 27px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+}
+.gym-membership {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 220px;
+    background: #41433f;
+    color: #fff;
+}
+.gym-membership > svg {
+    margin-bottom: 16px;
+    color: var(--yellow);
+}
+.gym-membership .eyebrow {
+    color: #e1e3dc;
+    margin-bottom: 6px;
+}
+.gym-membership h2 {
+    margin-bottom: 8px;
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 29px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+.gym-membership p:last-child {
+    margin: 0;
+    color: #e1e3dc;
+}
+.gym-schedule {
+    background: #fff;
+}
+.gym-schedule h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+}
+.gym-hours {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    list-style: none;
+    padding: 0;
+    margin: 20px 0;
+}
+.gym-hours li {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 20px;
+    background: #f0ede6;
+    font-size: 12px;
+}
+.gym-hours strong {
+    white-space: nowrap;
+}
+.inline-note {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    color: var(--muted);
+    font-size: 13px;
+    margin: 0;
+}
+.gym-attendance-note {
+    margin-top: 22px;
+    padding: 22px 0;
+    border-top: 1px solid var(--line);
+}
+.gym-attendance-note h2 {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 24px;
+    text-transform: uppercase;
+}
+.gym-attendance-note p {
+    max-width: 660px;
+    color: var(--muted);
+    margin: 0;
+}
+.birthday-packages {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+}
+.birthday-package {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 170px;
+    padding: 22px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    cursor: pointer;
+}
+.birthday-package input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+}
+.birthday-package:focus-within {
+    outline: 3px solid #ab8212;
+    outline-offset: 3px;
+}
+.birthday-package.selected {
+    box-shadow: inset 0 0 0 2px var(--yellow);
+}
+.birthday-package.package-tone-1,
+.birthday-package.package-tone-3 {
+    background: #454743;
+    color: #fff;
+}
+.birthday-package.package-tone-2 {
+    background: #fff;
+    color: var(--ink);
+}
+.package-name {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 25px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+.package-description {
+    margin-top: 8px;
+    color: inherit;
+    opacity: 0.78;
+    font-size: 12px;
+    line-height: 1.5;
+}
+.package-action {
+    margin-top: auto;
+    padding-top: 16px;
+    color: var(--green-dark);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.package-tone-1 .package-action,
+.package-tone-3 .package-action {
+    color: var(--yellow);
+}
+.birthday-inquiry-layout {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.72fr) minmax(0, 1.28fr);
+    gap: 22px;
+    margin-top: 22px;
+}
+.birthday-inquiry {
+    align-self: start;
+    padding: 24px;
+    border-radius: 8px;
+    background: var(--ink);
+    color: #fff;
+}
+.birthday-inquiry .eyebrow {
+    color: var(--yellow);
+    margin-bottom: 8px;
+}
+.birthday-inquiry h2 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--yellow);
+    font-size: 19px;
+    margin-bottom: 18px;
+}
+.birthday-inquiry .field {
+    margin-bottom: 12px;
+}
+.birthday-inquiry .field input {
+    color-scheme: dark;
+    background: #343932;
+    border-color: #606a59;
+    color: #fff;
+}
+.form-hint {
+    color: #d6dbd1;
+    font-size: 12px;
+    line-height: 1.5;
+}
+.birthday-inquiry .button {
+    width: 100%;
+    background: #0d8045;
+    color: #fff;
+}
+.birthday-inquiry .text-link {
+    color: var(--yellow);
+    margin-top: 12px;
+}
+.birthday-visual {
+    position: relative;
+    display: flex;
+    align-items: end;
+    min-height: 290px;
+    overflow: hidden;
+    background: #333;
+    color: #fff;
+}
+.birthday-visual::before {
+    position: absolute;
+    inset: 0;
+    content: "";
+    background: linear-gradient(0deg, #10130fbd 0%, transparent 70%), url("../assets/cancha.jpg") center / cover;
+}
+.birthday-visual span {
+    position: relative;
+    padding: 20px;
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 27px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+.simulation-confirmation {
+    display: flex;
+    gap: 14px;
+    margin-top: 20px;
+    padding: 18px 20px;
+    border-left: 4px solid var(--green);
+    background: #eef5eb;
+}
+.simulation-confirmation h2,
+.simulation-confirmation p {
+    margin-bottom: 5px;
+}
+.simulation-confirmation p:last-child {
+    margin: 0;
+}
+.reference-notice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    border-left: 3px solid #d99a34;
+    background: #f7f2e9;
+    color: #514630;
+    font-size: 13px;
+}
+.tournament-list {
+    display: grid;
+    gap: 12px;
+    margin-top: 18px;
+}
+.tournament-row {
+    display: grid;
+    grid-template-columns: 28px minmax(170px, 1fr) minmax(180px, 1.1fr) minmax(150px, 0.8fr) auto;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid #726d64;
+    border-radius: 8px;
+    background: #f7f2e9;
+}
+.tournament-row > svg {
+    color: var(--green-dark);
+}
+.tournament-row h2 {
+    font-size: 15px;
+    margin: 0;
+}
+.tournament-capacity {
+    color: var(--muted);
+    font-size: 12px;
+}
+.tournament-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.tournament-actions .button {
+    min-height: 38px;
+    padding: 8px 10px;
+    font-size: 12px;
+}
+.tournament-feature {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
+    gap: 24px;
+    margin-top: 22px;
+}
+.tournament-standing {
+    padding: 22px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    background: #454743;
+    color: #fff;
+}
+.tournament-standing .eyebrow {
+    color: var(--yellow);
+}
+.tournament-standing h2 {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 23px;
+    text-transform: uppercase;
+}
+.standings-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+.standings-table th,
+.standings-table td {
+    padding: 9px 4px;
+    border-bottom: 1px solid #70726b;
+    text-align: left;
+}
+.standings-table td {
+    text-align: right;
+}
+.standings-table tbody th {
+    font-weight: 500;
+}
+.tournament-standing .text-link {
+    margin-top: 12px;
+    color: var(--yellow);
+}
+.fixture-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 240px;
+    padding: 26px;
+    background: #e8e9e5;
+}
+.fixture-placeholder svg {
+    margin-bottom: 12px;
+    color: var(--green-dark);
+}
+.fixture-placeholder h2 {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 25px;
+    text-transform: uppercase;
+}
+.fixture-placeholder p,
+.empty-inline {
+    color: var(--muted);
+    font-size: 13px;
+}
+.tournament-contact-note {
+    margin-top: 18px;
+}
+.tournament-detail h3 {
+    margin: 20px 0 10px;
+    font-size: 16px;
+}
+.tournament-detail .reference-notice {
+    margin: 0 0 14px;
+}
+.tournament-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 0;
+}
+.tournament-meta div {
+    padding: 12px;
+    background: #f2f4ef;
+}
+.tournament-meta dt {
+    color: var(--muted);
+    font-size: 12px;
+}
+.tournament-meta dd {
+    margin: 5px 0 0;
+    font-weight: 700;
+}
+.fixture-list,
+.detail-standings {
+    padding-left: 20px;
+    font-size: 13px;
+}
+.detail-standings li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--line);
+}
+.about-intro,
+.location-section {
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 28px;
+    align-items: center;
+}
+.about-photo {
+    position: relative;
+    margin: 0;
+}
+.about-photo img,
+.location-photo {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1.45;
+    object-fit: cover;
+}
+.about-photo figcaption {
+    margin-top: 7px;
+    color: var(--muted);
+    font-size: 11px;
+}
+.about-copy h2 {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 29px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+.about-copy p:not(.eyebrow) {
+    color: var(--muted);
+}
+.location-section {
+    grid-template-columns: minmax(240px, 0.7fr) minmax(0, 1.3fr);
+    margin-top: 32px;
+    padding-top: 26px;
+    border-top: 1px solid var(--line);
+}
+.location-copy {
+    padding: 22px;
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+}
+.location-copy > svg {
+    color: var(--green-dark);
+    margin-bottom: 14px;
+}
+.location-copy h2 {
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 26px;
+    text-transform: uppercase;
+}
+.location-copy > p:not(.eyebrow) {
+    color: var(--muted);
+}
 @keyframes spin {
     to {
         transform: rotate(360deg);
@@ -1032,6 +1695,98 @@ main {
     }
     .service-links a {
         border-bottom: 1px solid var(--line);
+    }
+}
+@media (max-width: 850px) {
+    .home-hero-copy {
+        width: 88%;
+    }
+    .home-tournament-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .gym-overview,
+    .birthday-inquiry-layout,
+    .tournament-feature {
+        grid-template-columns: 1fr;
+    }
+    .about-intro,
+    .location-section {
+        grid-template-columns: 1fr 1fr;
+    }
+    .tournament-row {
+        grid-template-columns: 28px minmax(0, 1fr) auto;
+    }
+    .tournament-capacity {
+        grid-column: 2;
+    }
+    .tournament-row > .status-badge {
+        grid-column: 3;
+        grid-row: 2;
+    }
+    .tournament-actions {
+        grid-column: 2 / -1;
+        flex-wrap: wrap;
+    }
+}
+@media (max-width: 560px) {
+    .home-page {
+        padding-top: 16px;
+    }
+    .home-hero {
+        min-height: 430px;
+    }
+    .home-hero-copy {
+        width: 100%;
+        padding: 30px 20px;
+    }
+    .home-hero h1 {
+        font-size: 36px;
+    }
+    .home-tournament-list,
+    .service-links,
+    .birthday-packages,
+    .about-intro,
+    .location-section {
+        grid-template-columns: 1fr;
+    }
+    .service-links .service-link {
+        min-height: 54px;
+    }
+    .section-heading {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+    .gym-membership,
+    .gym-schedule,
+    .birthday-inquiry {
+        padding: 20px;
+    }
+    .gym-hours {
+        grid-template-columns: 1fr;
+    }
+    .birthday-package {
+        min-height: 145px;
+    }
+    .tournament-row {
+        grid-template-columns: 24px minmax(0, 1fr);
+        gap: 8px;
+    }
+    .tournament-row h2,
+    .tournament-capacity,
+    .tournament-row > .status-badge,
+    .tournament-actions {
+        grid-column: 2;
+        grid-row: auto;
+    }
+    .tournament-actions {
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+    .tournament-actions .button {
+        flex: 1;
+    }
+    .tournament-meta {
+        grid-template-columns: 1fr;
     }
 }
 @media (prefers-reduced-motion: reduce) {

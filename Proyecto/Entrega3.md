@@ -10,9 +10,11 @@ Interfaz React para La Fabrica Futbol 5, integrada con la API Express de turnos 
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | `frontend/src/assets`             | Fotografia local de referencia.                                                                                 |
 | `frontend/src/components`         | Layout, calendario semanal, formulario de turnos, dialogo, carga, notificaciones y estado compartido de turnos. |
-| `frontend/src/pages`              | Reserva, gestion de turnos, Home y secciones informativas.                                                      |
+| `frontend/src/pages`              | Reserva, gestion de turnos, Home, Gym, Cumpleanos, Torneos y Sobre Nosotros.                                  |
 | `frontend/src/services/turnos.js` | URL configurable, peticiones HTTP, interpretacion de respuestas y errores.                                      |
 | `frontend/src/services/auth.js`   | Login, registro, sesion actual, logout y manejo comun de errores HTTP.                                          |
+| `frontend/src/services/publicInfo.js` | Consultas centralizadas de Gym, paquetes, torneos y consultas simuladas.                                   |
+| `frontend/src/components/PublicDataState.jsx` | Estados compartidos de carga, error y reintento para páginas públicas.                            |
 | `frontend/src/components/AuthProvider.jsx` | Estado compartido de usuario y recuperacion inicial de sesion.                                         |
 | `frontend/src/utils`              | Fechas locales, semana, horarios, superposicion y validaciones.                                                 |
 | `frontend/src/styles`             | Estilos generales, responsive y estados visuales.                                                               |
@@ -37,7 +39,7 @@ Se verifico visualmente la pantalla "03 - Reservar Cancha" en la presentacion de
 - Importe "A confirmar": no se replica el precio del boceto porque no existe calculo de tarifas en la API.
 - Login/Register utiliza la API de autenticacion, restaura la sesion al iniciar y ofrece cierre de sesion desde la navegacion. El registro publico crea clientes; no permite elegir roles internos.
 
-Las restantes secciones del boceto mantienen enlaces de navegacion, pero no se presentan como funcionalidades implementadas. Su composicion visual completa y las ilustraciones originales quedan pendientes de acceso a los recursos correspondientes y de los endpoints necesarios.
+Home, Gym, Cumpleanos, Torneos y Sobre Nosotros tienen vistas públicas conectadas a los endpoints disponibles. La fotografía local de cancha se identifica como ilustrativa y los torneos como datos de referencia.
 
 ## Componentes reutilizables y experiencia de usuario
 
@@ -88,9 +90,11 @@ Las mutaciones exigen una sesion y un origen confiable. El personal solo puede a
 
 Las capturas incluyen valores de ejemplo para Torneos, no registros operativos. No se exponen DNI ni se inventan fixture, resultados o precios. El horario completo, vencimientos, pagos y asistencias de Gym no estan disponibles como datos reales.
 
+Home muestra los torneos devueltos por la API; Gym publica membresia general y horarios destacados; Cumpleanos permite elegir paquete y enviar una consulta simulada con cuenta de cliente; Torneos abre un detalle con tabla disponible y estado vacio para fixture; Sobre Nosotros usa la ubicacion documentada. No se muestran estados personales de cuota, pagos o asistencia.
+
 ## Pruebas
 
-`npm --prefix frontend test`: nueve pruebas automaticas de autenticacion, servicios HTTP, fechas locales y validaciones.
+`npm --prefix frontend test`: once pruebas automaticas de autenticacion, servicios HTTP, fechas locales y validaciones.
 
 `npm --prefix backend test`: dieciocho pruebas de autenticacion, turnos, contratos publicos y consultas simuladas.
 
@@ -114,12 +118,13 @@ Verificaciones con el contrato actual:
 2. Con rol cliente simulado en navegador, el formulario omite el ID y la tabla propia no muestra columna Cliente ni acciones.
 3. Pruebas HTTP aisladas con sesiones y repositorios temporales verifican propiedad, roles, origen confiable, sanitizacion publica, IDs internos existentes y conflictos.
 4. Pruebas HTTP de endpoints Gym, paquetes, torneos, detalle y consulta de cumpleaños autenticada, sin persistencia ni bloqueo.
+5. Navegador: Home, Gym, Cumpleanos, Torneos y Sobre Nosotros cargan sin errores de API a 1440 px; las cinco rutas no desbordan el viewport a 390 px.
 
 Los registros temporales de las pruebas se eliminaron al finalizar.
 
 ## Limites y recursos
 
-El backend guarda las reservas en memoria. La disponibilidad es publica y saneada; cada cliente consulta unicamente sus reservas y el personal puede gestionar el listado completo. La sesion determina el cliente al reservar; solo el personal puede editar o eliminar. Login/Register, turnos y contratos de lectura pública estan implementados. La UI de Gym/Cumpleaños/Torneos, registros reales de membresia/pagos/asistencia y fixture siguen pendientes.
+El backend guarda las reservas en memoria. La disponibilidad es publica y saneada; cada cliente consulta unicamente sus reservas y el personal puede gestionar el listado completo. La sesion determina el cliente al reservar; solo el personal puede editar o eliminar. Login/Register, turnos y frontend publico conectado estan implementados. Los paneles internos de empleado/admin, registros operativos de membresia/pagos/asistencia y fixture real siguen pendientes.
 
 Las consultas por WhatsApp se simularan para la entrega, sin numero real, enlaces externos ni mensajes enviados. Los paneles de empleado y administrador quedan para una etapa posterior. Contrato y pruebas de autenticacion: [backend/README.md](../backend/README.md).
 
