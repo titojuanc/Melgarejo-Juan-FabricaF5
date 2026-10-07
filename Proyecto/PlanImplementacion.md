@@ -33,7 +33,7 @@ Requisitos de la consigna:
 
 Pantallas identificadas en Figma: Login/Register, Home, Reservar Cancha, Gym, Cumpleanos, Torneos y Sobre Nosotros.
 
-Se verificaron visualmente Reservar Cancha y Login/Register. Cumpleanos, Gym, Torneos y las restantes composiciones todavia necesitan una revision detallada. No asumir que sus contenidos ya fueron extraidos ni inventar paquetes o precios.
+Las referencias exportadas de todas las pantallas estan en [imagenes_referencia](imagenes_referencia/). Se revisaron visualmente y los contratos publicos se basan en esos recursos y en las decisiones posteriores del usuario. No hay precios en la pantalla de Cumpleanos.
 
 Si el editor falla al mostrar el canvas, el modo presentacion permitio inspeccionar:
 
@@ -42,7 +42,7 @@ Si el editor falla al mostrar el canvas, el modo presentacion permitio inspeccio
 
 Estos enlaces son referencias reproducibles; no depender de los identificadores de pestanas de un navegador de otra sesion. Si un recurso no puede leerse, pedir una captura o exportacion antes de reconstruirlo.
 
-Al revisar el siguiente paso, la vista de diseno de Figma informo que WebGL no esta soportado. El prototipo permite ver Login/Register, pero no se pudieron extraer los frames de Gym, Cumpleanos ni Torneos ni sus hotspots; no usar nombres de paquetes, precios, horarios o fixture supuestos. Para completar esos contratos con fidelidad hace falta una captura/exportacion de esos tres frames o acceso al canvas de Figma.
+El prototipo interactivo de Figma no carga por WebGL, pero las capturas locales permiten revisar sus composiciones. El horario completo de Gym y los fixtures/resultados de Torneos no aparecen en las capturas; no completar esos datos por suposicion.
 
 ## 3. Respuestas del usuario a las dudas
 
@@ -66,7 +66,7 @@ La asistencia se toma presencialmente por el recepcionista, quien registra a las
 
 ### Cumpleanos
 
-Los paquetes, servicios y su presentacion estan en la pantalla Cumpleanos de Figma. Obtener la informacion de alli antes de implementar el catalogo y el formulario. No se conocen aun sus valores exactos en este documento.
+La referencia muestra tres paquetes: Basico (2 horas, mesa para invitados, 15 chicos), Full (2 horas, mesa para invitados y buffet, 20 chicos) y Premium (3 horas, mesa para invitados y buffet, 20 chicos). No muestra precios. El endpoint solo publica esos datos; una consulta requiere fecha/hora validas y 48 horas de anticipacion, pero su respuesta es simulada, no se persiste y no bloquea la cancha.
 
 Los cumpleanos ocupan la misma cancha que las reservas de futbol. Cuando se implemente la confirmacion interna, la disponibilidad debe contemplar ambos recursos y evitar superposiciones.
 
@@ -77,6 +77,8 @@ El Figma define la presentacion publica. El usuario solicito agregar una vista o
 El empleado maneja los torneos activos y carga resultados y estadisticas. En un caso real, los jugadores se registrarian por WhatsApp y el empleado cargaria manualmente los equipos y jugadores, con nombre y DNI, al organizar el torneo.
 
 El torneo debera generar su estructura segun la cantidad de equipos definida y el formato elegido, por ejemplo liga o copa. Las variantes exactas, reglas de puntuacion, desempates, cruces y manejo de cantidades impares no estan definidas: precisarlas al abordar el generador. Preferir una biblioteca adecuada para el motor si existe, en lugar de inventar reglas.
+
+La captura muestra tres ejemplos referenciales de Torneo Barrial (8/12, 12/12 y 9/12 equipos) y una tabla parcial para el segundo (River Plate 18, Chacarita 14, O'Higgins 13 y Real Madrid 10). La API los marca `datosDeReferencia`; no son registros operativos. La captura no incluye fixture, fechas de partidos ni resultados.
 
 No exponer DNI en endpoints publicos, fixtures o estadisticas visibles a clientes. La carga de equipos, jugadores y resultados sera privada y autorizada para el personal. La inscripcion no es un autoservicio publico dentro del sitio.
 
@@ -94,7 +96,7 @@ El usuario decidio que WhatsApp sea un mock para la entrega. No se necesita nume
 
 Los formularios deben validar sus datos y mostrar una confirmacion identificada como consulta simulada. No afirmar que un mensaje fue enviado, un pago recibido o una reserva confirmada. Esto no reemplaza el consumo real de la API requerido por la consigna.
 
-La decision resuelve la necesidad de una integracion externa. No define por si sola si cada consulta simulada debe guardarse como solicitud pendiente en la API ni cuando debe bloquear disponibilidad: cerrar ese pequeno contrato al implementar el recurso, sin tratar un mock como confirmacion real.
+Las consultas mock de Cumpleanos se validan en la API, pero no se guardan, no confirman el evento ni bloquean la cancha. No se abre WhatsApp ni se envia un mensaje.
 
 ## 4. Estado implementado
 
@@ -108,15 +110,15 @@ El repositorio original tenia `node_modules` versionado dentro del backend antig
 
 React con Vite, React Router y Lucide. Reserva semanal basada en la composicion del Figma, formulario reutilizable, listado de turnos con busqueda y filtro, edicion y eliminacion mediante dialogos, notificaciones compartidas y estilos responsive.
 
-Archivos para retomar:
+Referencias visuales compartidas: [Proyecto/imagenes_referencia](imagenes_referencia/). Archivos para retomar:
 
-- [App](../frontend/src/App.jsx): rutas actuales; no existe ruta de Login/Register todavia.
+- [App](../frontend/src/App.jsx): rutas actuales, incluida cuenta y turnos.
 - [Layout](../frontend/src/components/Layout.jsx): encabezado, navegacion y pie.
-- [TurnoForm](../frontend/src/components/TurnoForm.jsx): formulario que aun pide ID de cliente manualmente.
-- [TurnosProvider](../frontend/src/components/TurnosProvider.jsx): carga y mutaciones compartidas.
-- [Servicio de turnos](../frontend/src/services/turnos.js): fetch centralizado; aun no incluye credenciales de sesion.
+- [TurnoForm](../frontend/src/components/TurnoForm.jsx): el cliente no ingresa ID; el personal conserva asignacion interna.
+- [TurnosProvider](../frontend/src/components/TurnosProvider.jsx): disponibilidad publica y listas privadas por rol.
+- [Servicio de turnos](../frontend/src/services/turnos.js): fetch centralizado con credenciales de sesion.
 - [Reserva](../frontend/src/pages/ReservaPage.jsx) y [gestion de turnos](../frontend/src/pages/TurnosPage.jsx).
-- [Secciones informativas](../frontend/src/pages/InfoPage.jsx): Gym, Cumpleanos y Torneos son placeholders, no implementaciones completas.
+- [Secciones informativas](../frontend/src/pages/InfoPage.jsx): Gym, Cumpleanos y Torneos siguen como placeholders; los contratos de API ya estan disponibles.
 
 El Home no esta validado completamente contra Figma. Su foto es una referencia de Unsplash, no una imagen comprobada del establecimiento ni una ilustracion exportada del diseno.
 
@@ -154,7 +156,7 @@ La grilla consume disponibilidad publica. Los clientes ven solo sus reservas y n
 | Implementar autenticacion backend        | Completada | Endpoints, sesion, persistencia simple y diez pruebas.                        |
 | Integrar Login/Register de Figma         | Completada | Formularios reales, recuperacion de sesion y logout.                          |
 | Adaptar turnos y permisos                | Completada | Cliente desde sesion, datos propios, disponibilidad sin informacion personal. |
-| Completar contratos y endpoints publicos | Pendiente  | Informacion de Gym, paquetes de Cumpleanos, torneos y detalle de fixture.     |
+| Completar contratos y endpoints publicos | Completada | Horarios destacados, paquetes y torneos de referencia; mock sin bloqueo.      |
 | Recrear las demas pantallas              | Pendiente  | Composicion y recursos de Figma, formularios mock y servicios reales.         |
 | Verificar y documentar entrega completa  | Pendiente  | Pruebas, accesibilidad, responsive y contraste con las consignas.             |
 
@@ -164,17 +166,17 @@ Se inspecciono el frame 1-4. La ruta `/cuenta` conserva login y registro en pane
 
 La prueba de servicios cubre rutas, cookies, cuerpos, sesion ausente y errores. Las pruebas del backend cubren el ciclo HTTP de registro, recuperacion, login y logout. Se verifico el layout a 1440 px y 390 px. No se construyeron paneles internos.
 
-### Siguiente tarea concreta: completar contratos publicos (bloqueada por recursos)
+### Contratos publicos implementados
 
-Revisar en Figma la composicion pendiente de Gym, Cumpleanos y Torneos antes de implementar catalogos o formularios. Definir contratos pequenos para la informacion publica y conectar los servicios; no inventar paquetes ni precios. El fixture y las estadisticas requieren reglas confirmadas y no deben exponer DNI. Mantener separados los futuros flujos internos de empleados/admin.
+`GET /gym` publica la membresia normal y solo los cuatro horarios destacados legibles; marca que el horario completo no esta disponible. No expone estado de cuota, pagos ni asistencias de ejemplo. `GET /cumpleanos/paquetes` devuelve los tres paquetes visibles sin precios. `POST /cumpleanos/consultas` requiere cliente y origen confiable, valida paquete, fecha/hora y anticipacion de 48 horas; responde como simulacion, no persiste la solicitud, no confirma el evento y no bloquea la cancha.
 
-La lectura del DOCX solo confirma una membresia, control de vencimiento, cumpleanos como evento de cancha y torneos con equipos; no contiene paquetes, precios, horarios del gimnasio ni datos reales de torneos. No se agregaron endpoints vacios ni catalogos ficticios: pedir las capturas/exportaciones faltantes y luego completar cada recurso como etapa verificable con commit y push.
+`GET /torneos` y `GET /torneos/:id` entregan los conteos, estados y tabla parcial visibles en la captura, marcados `datosDeReferencia: true`. No exponen DNI ni inventan fixture, fechas o resultados. El prototipo no provee un horario completo de Gym ni fixture verificable.
 
-### Otros recursos
+### Siguiente tarea concreta: recrear las pantallas de referencia
 
-Los nombres siguientes son propuestas, no endpoints ya implementados: `GET /gym`, `GET /cumpleanos/paquetes`, `GET /torneos`, `GET /torneos/:id` y lectura del fixture/resultados. Definir contratos pequenos y devolver la informacion de la API, no duplicar catalogos dentro de componentes.
+Implementar Home, Gym, Cumpleanos, Torneos y Sobre Nosotros contrastando las capturas de `Proyecto/imagenes_referencia`. Consumir los endpoints desde servicios centralizados. Mantener claros los datos referenciales de torneos, no agregar precios y presentar cualquier consulta simulada como no confirmada.
 
-La carga de datos internos debe quedar separada de la consulta publica. No inventar reservas de gimnasio ni pagos online. La generacion de torneos requiere reglas de formato confirmadas antes de elegir el motor. Las pantallas internas siguen fuera del alcance inmediato.
+La carga de resultados reales, fixture, membresias, pagos y asistencias requiere el futuro flujo interno y datos reales. No generar cruces hasta confirmar formato, desempates y manejo de cantidades impares. Los paneles internos siguen fuera del alcance inmediato.
 
 ## 6. Ejecucion y comprobaciones
 
@@ -202,10 +204,10 @@ npm --prefix frontend run build
 
 Estado verificado al cerrar la implementacion:
 
-- Backend: trece pruebas de servicio, HTTP, sesiones, permisos de turnos, aislamiento de clientes, persistencia, duplicados simultaneos y bootstrap de admin pasaron.
+- Backend: dieciocho pruebas de servicio, HTTP, sesiones, permisos, contratos públicos y consultas simuladas pasaron.
 - Frontend: nueve pruebas de servicios y validacion, y compilacion de produccion pasaron con Login/Register y turnos por rol.
 - Se verificaron con navegador los flujos originales de crear, editar, cancelar eliminacion y eliminar turnos; errores de API, reintento, Escape, restauracion de foco, movil y carga de imagen.
-- API activa comprobada en navegador: `/auth/me` devuelve 401 sin sesion, tratado silenciosamente como visitante; disponibilidad carga y la pantalla solicita iniciar sesion antes de reservar. No se crearon cuentas permanentes durante la verificacion.
+- APIs públicas probadas: Gym, paquetes, torneos y detalle; consulta de cumpleaños requiere cliente y no confirma ni ocupa la cancha. No se crearon cuentas permanentes durante las pruebas.
 
 Las pruebas de backend usan archivos temporales y puertos aleatorios. No depender de servidores que hayan quedado abiertos ni de datos locales de otra sesion.
 
@@ -218,7 +220,7 @@ El backend no carga `.env` automaticamente. Configurar variables antes de inicia
 ## 7. Riesgos y pendientes que no deben ocultarse
 
 - Login/Register y turnos por rol estan integrados. El formulario interno de personal conserva la asignacion manual de cliente, limitada a perfiles existentes.
-- No hay backend funcional de Gym, Cumpleanos o Torneos ni generador de fixture.
+- Los endpoints públicos de referencia existen; siguen pendientes UI, horario completo de Gym, datos operativos de membresía, fixture/resultados reales y generación de torneos.
 - Cumpleanos y reservas comparten cancha; no validar su disponibilidad como recursos independientes al confirmar ocupaciones.
 - Persistencia de cuentas en archivo y sesiones en memoria son para una sola instancia local, no para produccion.
 - No se implementaron recuperacion de contrasena ni verificacion de email; no prometidas para este paso.

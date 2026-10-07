@@ -26,6 +26,18 @@ Todas las respuestas mantienen `{ success: true, data }` o `{ success: false, me
 | `POST /auth/logout`   | Origen permitido                | Destruye la sesion y elimina la cookie.      |
 | `POST /auth/users`    | Administrador, origen permitido | Crea empleados u otros administradores; 201. |
 
+### Contenido publico
+
+| Metodo y ruta                 | Acceso                              | Resultado                                                        |
+| ----------------------------- | ----------------------------------- | ---------------------------------------------------------------- |
+| `GET /gym`                    | Publico                             | Membresia normal y horarios destacados visibles en referencia.   |
+| `GET /cumpleanos/paquetes`    | Publico                             | Basico, Full y Premium; no incluye precios.                      |
+| `POST /cumpleanos/consultas`  | Cliente y origen permitido          | Consulta simulada con 48 h de anticipacion; no persiste ni reserva cancha. |
+| `GET /torneos`                | Publico                             | Conteos/estados de referencia marcados `datosDeReferencia`.      |
+| `GET /torneos/:id`            | Publico                             | Detalle y tabla parcial; sin DNI ni partidos inventados.         |
+
+El horario completo del gimnasio no se ve en la captura. Los torneos son datos ilustrativos de Figma, no registros reales. Una consulta de cumpleaños valida el paquete y fecha/hora, pero no confirma el evento, no se guarda y no bloquea la cancha.
+
 ### Turnos
 
 | Metodo y ruta                     | Acceso                            | Resultado                                                |

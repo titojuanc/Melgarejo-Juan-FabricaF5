@@ -13,13 +13,16 @@ import {
     sessionCookieOptions
 } from "./config/auth.js";
 import { createAuthRoutes } from "./routes/authRoutes.js";
+import { createPublicInfoRoutes } from "./routes/publicInfoRoutes.js";
 import authService from "./services/AuthService.js";
 import { TurnoService } from "./services/TurnoService.js";
 import turnoService from "./services/TurnoService.js";
+import publicInfoService from "./services/PublicInfoService.js";
 
 export function createApp({
     auth = authService,
     turnos,
+    publicInfo = publicInfoService,
     authLimit = 20,
     sessionSecret = getSessionSecret()
 } = {}) {
@@ -42,6 +45,7 @@ export function createApp({
         })
     );
     app.use("/auth", createAuthRoutes(auth, authLimit));
+    app.use(createPublicInfoRoutes(publicInfo, auth));
     app.use(createRoutes(turnoApi, auth));
 
     app.use(routeNotFoundHandler);

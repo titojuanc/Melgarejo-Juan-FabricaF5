@@ -76,11 +76,23 @@ El backend valida fechas reales y futuras, horas, cantidades y superposicion; de
 
 Las mutaciones exigen una sesion y un origen confiable. El personal solo puede asignar reservas a un perfil de cliente existente.
 
+### Contenido publico
+
+| Metodo y ruta                  | Resultado                                                           |
+| ------------------------------ | ------------------------------------------------------------------- |
+| `GET /gym`                     | Membresia normal y cuatro horarios destacados; horario completo no disponible. |
+| `GET /cumpleanos/paquetes`     | Basico, Full y Premium segun referencia; no hay precios publicados. |
+| `POST /cumpleanos/consultas`   | Cliente autenticado; valida 48 horas y devuelve consulta simulada sin persistir ni bloquear cancha. |
+| `GET /torneos`                 | Conteos/estados de referencia, marcados `datosDeReferencia`.         |
+| `GET /torneos/:id`             | Tabla parcial disponible; partidos vacios si no hay fixture real.   |
+
+Las capturas incluyen valores de ejemplo para Torneos, no registros operativos. No se exponen DNI ni se inventan fixture, resultados o precios. El horario completo, vencimientos, pagos y asistencias de Gym no estan disponibles como datos reales.
+
 ## Pruebas
 
 `npm --prefix frontend test`: nueve pruebas automaticas de autenticacion, servicios HTTP, fechas locales y validaciones.
 
-`npm --prefix backend test`: trece pruebas de autenticacion, permisos, propiedad de turnos, privacidad de disponibilidad y conflictos.
+`npm --prefix backend test`: dieciocho pruebas de autenticacion, turnos, contratos publicos y consultas simuladas.
 
 `npm --prefix frontend run build`: compilacion de produccion, incluyendo la fotografia en el bundle.
 
@@ -101,12 +113,13 @@ Verificaciones con el contrato actual:
 1. En navegador, `/auth/me` sin sesion devuelve 401 silencioso y la disponibilidad publica carga; el formulario solicita ingresar y no muestra ID de cliente.
 2. Con rol cliente simulado en navegador, el formulario omite el ID y la tabla propia no muestra columna Cliente ni acciones.
 3. Pruebas HTTP aisladas con sesiones y repositorios temporales verifican propiedad, roles, origen confiable, sanitizacion publica, IDs internos existentes y conflictos.
+4. Pruebas HTTP de endpoints Gym, paquetes, torneos, detalle y consulta de cumpleaños autenticada, sin persistencia ni bloqueo.
 
 Los registros temporales de las pruebas se eliminaron al finalizar.
 
 ## Limites y recursos
 
-El backend guarda las reservas en memoria. La disponibilidad es publica y saneada; cada cliente consulta unicamente sus reservas y el personal puede gestionar el listado completo. La sesion determina el cliente al reservar; solo el personal puede editar o eliminar. Login/Register y la adaptacion de turnos a la sesion estan implementados. No hay gestion publica de clientes, gimnasio, membresias, pagos, eventos o torneos.
+El backend guarda las reservas en memoria. La disponibilidad es publica y saneada; cada cliente consulta unicamente sus reservas y el personal puede gestionar el listado completo. La sesion determina el cliente al reservar; solo el personal puede editar o eliminar. Login/Register, turnos y contratos de lectura pública estan implementados. La UI de Gym/Cumpleaños/Torneos, registros reales de membresia/pagos/asistencia y fixture siguen pendientes.
 
 Las consultas por WhatsApp se simularan para la entrega, sin numero real, enlaces externos ni mensajes enviados. Los paneles de empleado y administrador quedan para una etapa posterior. Contrato y pruebas de autenticacion: [backend/README.md](../backend/README.md).
 
