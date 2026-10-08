@@ -50,6 +50,26 @@ El horario completo del gimnasio no se ve en la captura. Los torneos son datos i
 
 El backend valida fecha real y futura, horario, cantidad de jugadores, perfil de cliente y superposicion. Un conflicto devuelve 409. Los clientes no pueden cambiar propietario, editar ni cancelar reservas; tampoco pueden consultar el listado interno.
 
+### Operaciones internas
+
+Las rutas bajo `/interno` requieren sesion de empleado o administrador. Ambos roles pueden operar turnos, pagos, membresias, asistencias y torneos; solo el administrador puede crear cuentas internas. Las mutaciones requieren un origen permitido.
+
+| Metodo y ruta                        | Operacion                                           |
+| ------------------------------------ | --------------------------------------------------- |
+| `GET /interno/clientes`              | Buscar clientes por id/nombre para asociar registros. |
+| `GET/POST /interno/pagos`            | Consultar y registrar pagos recibidos manualmente. |
+| `GET/POST /interno/gym/membresias`   | Consultar y registrar periodos de membresia.       |
+| `GET/POST /interno/gym/asistencias`  | Consultar y registrar asistencia presencial.       |
+| `GET/POST /interno/torneos`          | Consultar y crear torneos operativos.              |
+| `GET /interno/torneos/:id`           | Consultar equipos, partidos y estadisticas.        |
+| `POST /interno/torneos/:id/equipos`  | Cargar un equipo y su cantidad de jugadores.        |
+| `POST /interno/torneos/:id/partidos` | Cargar manualmente fecha y resultado de un partido. |
+
+Los pagos guardan el importe ingresado por el personal y deben asociarse a un turno o una membresia; no calculan precios, senas ni recargos. Las membresias registran fechas explicitas, sin tarifa. La asistencia no se bloquea por estado de membresia. Los partidos y resultados son manuales: no se genera fixture ni tabla de puntos/desempates. Las estadisticas operativas se limitan a partidos jugados, ganados, empatados, perdidos y goles.
+
+Estos datos se guardan en `backend/data/operations.json`, excluido de Git. No se mezclan con los torneos ilustrativos de las rutas publicas ni se exponen datos personales en ellas.
+La consulta interna de clientes devuelve solo `id` y `nombre`; no permite editar perfiles ni devuelve telefono o email.
+
 Registro:
 
 ```json

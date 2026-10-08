@@ -213,3 +213,75 @@ test("HTTP: turnos rechaza fechas invalidas y reservas superpuestas", async (con
     });
     assert.equal(invalid.response.status, 400);
 });
+
+test("HTTP: el personal confirma y cancela turnos con transiciones validas", async (context) => {
+    const { auth, request } = await fixture(context);
+    const registered = await request("/auth/register", {
+        method: "POST",
+        data: clientData,
+    });
+    const created = await request("/turnos", {
+        method: "POST",
+        data: {
+            fecha: "2099-12-31",
+            horaInicio: "20:00",
+            horaFin: "21:00",
+            cantidadJugadores: 10,
+            incluyeLuces: false,
+        },
+        cookie: registered.cookie,
+    });
+    const turnId = created.body.data.id;
+    const staffData = {
+        ...clientData,
+        email: "empleado@example.test",
+        rol: "empleado",
+    };
+    await auth.createStaff(staffData);
+    const staff = await request("/auth/login", {
+        method: "POST",
+        data: staffData,
+    });
+
+    assert.equal(
+        (
+            await request(`/turnos/${turnId}/confirmar`, {
+                method: "POST",
+                cookie: registered.cookie,
+            })
+        ).response.status,
+        403,
+    );
+    const confirmed = await request(`/turnos/${turnId}/confirmar`, {
+        method: "POST",
+        cookie: staff.cookie,
+    });
+    assert.equal(confirmed.response.status, 200);
+    assert.equal(confirmed.body.data.estado, "Confirmado");
+
+    const canceled = await request(`/turnos/${turnId}/cancelar`, {
+        method: "POST",
+        cookie: staff.cookie,
+    });
+    assert.equal(canceled.response.status, 200);
+    assert.equal(canceled.body.data.estado, "Cancelado");
+    assert.equal(
+        (
+            await request(`/turnos/${turnId}`, {
+                method: "PUT",
+                cookie: staff.cookie,
+                data: { cantidadJugadores: 12 },
+            })
+        ).response.status,
+        409,
+    );
+    assert.equal(
+        (
+            await request(`/turnos/${turnId}/confirmar`, {
+                method: "POST",
+                cookie: staff.cookie,
+            })
+        ).response.status,
+        409,
+    );
+});

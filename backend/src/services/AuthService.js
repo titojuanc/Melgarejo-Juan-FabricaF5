@@ -89,6 +89,10 @@ export class AuthService {
     isClientId(id) {
         return Boolean(this.repository.findClientById(id));
     }
+
+    getClients() {
+        return this.repository.findAllClients();
+    }
 }
 
 export default new AuthService();

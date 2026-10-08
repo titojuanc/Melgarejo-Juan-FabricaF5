@@ -1,3 +1,5 @@
+import { ConflictError } from "../exceptions/AppError.js";
+
 class Turno {
     constructor(
         id,
@@ -19,9 +21,19 @@ class Turno {
         this.clienteId = clienteId;
     }
 
-    confirmar() {}
+    confirmar() {
+        if (this.estado !== "Pendiente") {
+            throw new ConflictError("Solo se pueden confirmar turnos pendientes.");
+        }
+        this.estado = "Confirmado";
+    }
 
-    cancelar() {}
+    cancelar() {
+        if (!["Pendiente", "Confirmado"].includes(this.estado)) {
+            throw new ConflictError("El turno ya esta cancelado.");
+        }
+        this.estado = "Cancelado";
+    }
 
     iniciar() {}
 

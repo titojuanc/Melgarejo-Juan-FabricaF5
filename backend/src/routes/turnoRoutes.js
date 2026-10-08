@@ -46,6 +46,20 @@ export function createTurnoRoutes(service = turnoService, auth = authService) {
 		requireRoles("empleado", "admin"),
 		controller.update.bind(controller),
 	);
+	router.post(
+		"/:id/confirmar",
+		requireTrustedOrigin,
+		authenticate,
+		requireRoles("empleado", "admin"),
+		controller.confirm.bind(controller),
+	);
+	router.post(
+		"/:id/cancelar",
+		requireTrustedOrigin,
+		authenticate,
+		requireRoles("empleado", "admin"),
+		controller.cancel.bind(controller),
+	);
 	router.delete(
 		"/:id",
 		requireTrustedOrigin,

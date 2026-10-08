@@ -71,9 +71,9 @@ Las pruebas cubren el contrato HTTP y las validaciones del formulario. También 
 
 La reserva semanal respeta la composición del [wireframe original de Figma](https://www.figma.com/design/BzSyxA0BZY462Cntvvr5Dr/La-F%C3%A1brica-F%C3%BAtbol-5---Wireframe-Web?node-id=0-1): encabezado oscuro, disponibilidad verde/gris, reserva lateral y pie de página. La pantalla de gestión completa el CRUD de la API.
 
-La API guarda las reservas en memoria: reiniciar el backend elimina los turnos. La autenticación del backend ya incluye registro, login, logout, sesión actual y creación de cuentas internas por administradores; las cuentas persisten en un archivo local. Login/Register y la asociación automática de reservas en el frontend quedan para el siguiente paso. Contrato y creación del primer administrador: [backend/README.md](backend/README.md).
+La API guarda las reservas en memoria: reiniciar el backend elimina los turnos. La autenticación incluye registro, login, logout, sesión actual y creación de cuentas internas por administradores; las cuentas persisten en un archivo local. El frontend público y Login/Register consumen la API. Contrato y creación del primer administrador: [backend/README.md](backend/README.md).
 
-Todavía no hay endpoints de gestión de clientes, cálculo de precios, pagos ni gestión de gimnasio, eventos o torneos. WhatsApp será un mock para la entrega, sin interacción real. La foto del Home es una referencia, no una fotografía verificada del establecimiento ni una ilustración exportada de Figma.
+Las operaciones internas protegidas por rol permiten gestionar turnos, registrar pagos recibidos, membresías, asistencias y datos operativos de torneos. No hay cobros online, cálculo de precios, fixture automático ni mensajes reales de WhatsApp. La foto del Home es una referencia, no una fotografía verificada del establecimiento ni una ilustración exportada de Figma.
 
 Las validaciones de superposición se realizan en el frontend; no garantizan exclusión entre usuarios concurrentes porque el backend todavía no impone esa regla. No debe publicarse como sistema de reservas definitivo sin validación transaccional, persistencia y control de acceso en el servidor.
 

@@ -57,6 +57,9 @@ export class TurnoService {
 
     update(id, data) {
         const current = this.getById(id);
+        if (current.estado === "Cancelado") {
+            throw new ConflictError("No se puede reprogramar un turno cancelado.");
+        }
         if (
             !data ||
             typeof data !== "object" ||
@@ -70,6 +73,18 @@ export class TurnoService {
         validateTurnoData(updated);
         this.ensureAvailable(updated, id);
         return this.repository.update(id, data);
+    }
+
+    confirm(id) {
+        const turno = this.getById(id);
+        turno.confirmar();
+        return turno;
+    }
+
+    cancel(id) {
+        const turno = this.getById(id);
+        turno.cancelar();
+        return turno;
     }
 
     delete(id) {

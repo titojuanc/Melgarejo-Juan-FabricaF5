@@ -61,6 +61,24 @@ export class TurnoController {
         }
     }
 
+    confirm(req, res, next) {
+        try {
+            const id = Number(req.params.id);
+            return successResponse(res, this.service.confirm(id));
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    cancel(req, res, next) {
+        try {
+            const id = Number(req.params.id);
+            return successResponse(res, this.service.cancel(id));
+        } catch (error) {
+            next(error);
+        }
+    }
+
     delete(req, res, next) {
         try {
             const id = Number(req.params.id);

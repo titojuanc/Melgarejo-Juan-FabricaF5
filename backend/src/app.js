@@ -14,14 +14,18 @@ import {
 } from "./config/auth.js";
 import { createAuthRoutes } from "./routes/authRoutes.js";
 import { createPublicInfoRoutes } from "./routes/publicInfoRoutes.js";
+import { createOperationsRoutes } from "./routes/operationsRoutes.js";
 import authService from "./services/AuthService.js";
 import { TurnoService } from "./services/TurnoService.js";
+import { OperationsService } from "./services/OperationsService.js";
 import turnoService from "./services/TurnoService.js";
+import operationsService from "./services/OperationsService.js";
 import publicInfoService from "./services/PublicInfoService.js";
 
 export function createApp({
     auth = authService,
     turnos,
+    operations,
     publicInfo = publicInfoService,
     authLimit = 20,
     sessionSecret = getSessionSecret()
@@ -31,6 +35,11 @@ export function createApp({
         (auth === authService
             ? turnoService
             : new TurnoService(undefined, auth));
+    const operationsApi =
+        operations ||
+        (auth === authService
+            ? operationsService
+            : new OperationsService(undefined, auth, turnoApi));
     const app = express();
     app.disable("x-powered-by");
     app.use(cors({ origin: frontendOrigins, credentials: true }));
@@ -46,6 +55,7 @@ export function createApp({
     );
     app.use("/auth", createAuthRoutes(auth, authLimit));
     app.use(createPublicInfoRoutes(publicInfo, auth));
+    app.use("/interno", createOperationsRoutes(operationsApi, auth));
     app.use(createRoutes(turnoApi, auth));
 
     app.use(routeNotFoundHandler);

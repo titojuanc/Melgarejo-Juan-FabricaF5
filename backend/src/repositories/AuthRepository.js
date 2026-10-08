@@ -45,6 +45,10 @@ export class AuthRepository {
         return this.state.clientes.find((cliente) => cliente.id === id);
     }
 
+    findAllClients() {
+        return this.state.clientes.map(({ id, nombre }) => ({ id, nombre }));
+    }
+
     hasAdmin() {
         return this.state.usuarios.some((usuario) => usuario.rol === "admin");
     }
