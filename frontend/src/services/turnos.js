@@ -41,5 +41,9 @@ export const updateTurno = (id, data) =>
         method: "PUT",
         body: JSON.stringify(data),
     });
+export const confirmTurno = (id) =>
+    request(`/${encodeURIComponent(id)}/confirmar`, { method: "POST" });
+export const cancelTurno = (id) =>
+    request(`/${encodeURIComponent(id)}/cancelar`, { method: "POST" });
 export const deleteTurno = (id) =>
     request(`/${encodeURIComponent(id)}`, { method: "DELETE" });

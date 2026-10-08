@@ -1,6 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { getCurrentUser, login, logout, register } from "./auth.js";
+import {
+    createStaffUser,
+    getCurrentUser,
+    login,
+    logout,
+    register,
+} from "./auth.js";
 
 test("autenticacion usa las rutas, credenciales y cuerpos esperados", async (context) => {
     const calls = [];
@@ -14,6 +20,7 @@ test("autenticacion usa las rutas, credenciales y cuerpos esperados", async (con
     await login({ email: "ana@example.test", password: "clave-segura" });
     await register({ nombre: "Ana", password: "clave-segura" });
     await logout();
+    await createStaffUser({ nombre: "Luis", rol: "empleado" });
 
     assert.equal(calls[0].url, "http://localhost:3000/auth/me");
     assert.equal(calls[0].credentials, "include");
@@ -25,6 +32,12 @@ test("autenticacion usa las rutas, credenciales y cuerpos esperados", async (con
     assert.equal(calls[2].url, "http://localhost:3000/auth/register");
     assert.equal(calls[3].method, "POST");
     assert.equal(calls[3].url, "http://localhost:3000/auth/logout");
+    assert.equal(calls[4].url, "http://localhost:3000/auth/users");
+    assert.equal(calls[4].method, "POST");
+    assert.deepEqual(JSON.parse(calls[4].body), {
+        nombre: "Luis",
+        rol: "empleado",
+    });
 });
 
 test("una sesion ausente se interpreta como visitante y los errores se conservan", async (context) => {

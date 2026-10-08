@@ -78,6 +78,14 @@ export default function Layout({ children }) {
                                     : "Gestionar turnos"}
                             </NavLink>
                         )}
+                        {user && ["empleado", "admin"].includes(user.rol) && (
+                            <NavLink
+                                to="/gestion"
+                                onClick={() => setOpen(false)}
+                            >
+                                Panel interno
+                            </NavLink>
+                        )}
                         {user ? (
                             <>
                                 <Link to="/cuenta" onClick={() => setOpen(false)}>

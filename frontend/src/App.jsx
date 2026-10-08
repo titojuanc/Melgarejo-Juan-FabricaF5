@@ -6,6 +6,7 @@ import TurnosPage from "./pages/TurnosPage.jsx";
 import HomePage from "./pages/HomePage.jsx";
 import InfoPage from "./pages/InfoPage.jsx";
 import CuentaPage from "./pages/CuentaPage.jsx";
+import GestionPage from "./pages/GestionPage.jsx";
 
 export default function App() {
     const { pathname } = useLocation();
@@ -19,6 +20,7 @@ export default function App() {
                 <Route path="/" element={<ReservaPage />} />
                 <Route path="/inicio" element={<HomePage />} />
                 <Route path="/turnos" element={<TurnosPage />} />
+                <Route path="/gestion" element={<GestionPage />} />
                 <Route path="/cuenta" element={<CuentaPage />} />
                 <Route path="/gym" element={<InfoPage section="gym" />} />
                 <Route

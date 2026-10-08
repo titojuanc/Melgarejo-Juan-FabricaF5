@@ -434,6 +434,7 @@ main {
     font-weight: 500;
 }
 .field input,
+.field select,
 .status-filter select,
 .search-field input {
     width: 100%;
@@ -1503,6 +1504,215 @@ main {
 .location-copy > p:not(.eyebrow) {
     color: var(--muted);
 }
+.management-heading-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.management-tabs {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    padding: 10px 0;
+    margin-bottom: 22px;
+}
+.management-tabs button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 8px 14px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--muted);
+    font-weight: 600;
+    white-space: nowrap;
+}
+.management-tabs button:hover {
+    background: #eef2e9;
+    color: var(--ink);
+}
+.management-tabs button.active {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: #fff;
+}
+.management-tabs button.active svg {
+    color: var(--yellow);
+}
+.management-tabpanel {
+    min-width: 0;
+}
+.management-panel-title {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 20px;
+}
+.management-panel-title svg {
+    color: var(--green-dark);
+}
+.management-panel-title h2 {
+    margin: 0;
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 25px;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+.management-panel {
+    min-width: 0;
+    border-top: 1px solid var(--line);
+    padding-top: 18px;
+}
+.management-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.management-section-heading .eyebrow {
+    margin-bottom: 5px;
+}
+.management-section-heading h2 {
+    margin: 0;
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+}
+.management-count {
+    color: var(--muted);
+    font-size: 13px;
+    white-space: nowrap;
+}
+.management-form {
+    max-width: 960px;
+    margin-bottom: 24px;
+}
+.management-fields {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0 14px;
+}
+.management-fields .field input,
+.management-fields .field select,
+.management-form .field input,
+.management-form .field select {
+    background: #fff;
+    color: var(--ink);
+}
+.management-form .button {
+    margin-top: 2px;
+}
+.management-form .light-hint,
+.management-note {
+    color: var(--muted);
+    margin: 10px 0 0;
+}
+.management-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 26px;
+}
+.management-operation {
+    min-width: 0;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+}
+.management-operation h3,
+.management-subheading {
+    margin: 0 0 14px;
+    font-size: 17px;
+}
+.management-subheading {
+    margin-top: 25px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+}
+.management-records {
+    margin-top: 8px;
+}
+.management-table {
+    min-width: 690px;
+}
+.management-table thead th {
+    white-space: nowrap;
+}
+.management-table td,
+.management-table tbody th {
+    padding-top: 13px;
+    padding-bottom: 13px;
+}
+.management-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 0;
+    border-top: 1px solid var(--line);
+}
+.management-toolbar label {
+    font-size: 13px;
+    font-weight: 600;
+}
+.management-toolbar select {
+    min-width: min(340px, 100%);
+    min-height: 40px;
+    border: 1px solid #bdc5b6;
+    border-radius: 4px;
+    padding: 8px 10px;
+    background: #fff;
+    color: var(--ink);
+    font: inherit;
+}
+.management-tournament-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px 22px;
+    flex-wrap: wrap;
+    padding: 12px 0 18px;
+    color: var(--muted);
+    font-size: 13px;
+}
+.management-tournament-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.management-tournament-meta svg {
+    color: var(--green-dark);
+}
+.management-score-fields {
+    grid-template-columns: 1.2fr 1fr 1fr;
+}
+.management-state,
+.management-inline-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 170px;
+    color: var(--muted);
+}
+.management-inline-state {
+    min-height: 70px;
+    justify-content: flex-start;
+}
+.management-error {
+    color: #9b2c23;
+}
+.status-confirmed {
+    background: #e3efe3;
+    color: #28602b;
+}
+.empty-inline {
+    margin: 12px 0;
+}
+.light-hint {
+    color: var(--muted);
+}
 @keyframes spin {
     to {
         transform: rotate(360deg);
@@ -1727,6 +1937,16 @@ main {
         grid-column: 2 / -1;
         flex-wrap: wrap;
     }
+    .management-columns {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    .management-fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .tournament-create-fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 @media (max-width: 560px) {
     .home-page {
@@ -1787,6 +2007,36 @@ main {
     }
     .tournament-meta {
         grid-template-columns: 1fr;
+    }
+    .management-heading-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+    .management-fields,
+    .tournament-create-fields {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    .management-score-fields {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .management-score-fields .field:first-child {
+        grid-column: 1 / -1;
+    }
+    .management-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 7px;
+    }
+    .management-toolbar select {
+        min-width: 0;
+        width: 100%;
+    }
+    .management-section-heading {
+        align-items: flex-start;
+    }
+    .management-table {
+        min-width: 620px;
     }
 }
 @media (prefers-reduced-motion: reduce) {

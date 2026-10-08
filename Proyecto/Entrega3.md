@@ -72,11 +72,30 @@ Las notificaciones se colocan dentro del dialogo activo para no quedar ocultas d
 
 Los servicios centralizados procesan `{ success, data }` y lanzan errores ante fallos HTTP, JSON invalido o falta de conexion. Las peticiones incluyen credenciales de cookie. Un `401` inicial de `/auth/me` indica visitante y no genera una notificacion. Los componentes no realizan `fetch` directamente. La URL base es configurable con `VITE_API_URL`; Vite y la API usan `localhost` para compartir el host de la cookie.
 
-`/cuenta` reproduce los formularios de ingreso y registro del frame 1-4. El registro publico valida los campos del contrato de API y deja equipo como opcional. Al iniciar sesion o registrarse, la navegacion vuelve al flujo publico de reserva; el encabezado muestra la cuenta y permite cerrar sesion. No se almacena la contrasena ni se construyen paneles internos.
+`/cuenta` reproduce los formularios de ingreso y registro del frame 1-4. El registro publico valida los campos del contrato de API y deja equipo como opcional. Al iniciar sesion o registrarse, la navegacion vuelve al flujo publico de reserva; el encabezado muestra la cuenta y permite cerrar sesion. No se almacena la contrasena ni el rol en el navegador. Empleado y admin ven el acceso a `/gestion`; cliente es redirigido fuera de esa ruta.
 
 El backend valida fechas reales y futuras, horas, cantidades y superposicion; devuelve 409 si el horario ya fue ocupado. La actualizacion valida campos permitidos y no acepta cambiar propietario ni estado. Los clientes no pueden editar ni cancelar sus reservas. El estado inicial "Pendiente" lo decide el backend; no se simulan confirmaciones de pago.
 
 Las mutaciones exigen una sesion y un origen confiable. El personal solo puede asignar reservas a un perfil de cliente existente.
+
+### Operaciones internas
+
+Empleado y admin utilizan `/gestion` para registrar pagos recibidos, períodos de membresía, asistencias presenciales y datos operativos de torneos. El cliente no ve ese acceso; el administrador dispone además de la creación de cuentas internas. Las mutaciones se envían a rutas protegidas del backend, no se autorizan solo por ocultar controles.
+
+| Metodo y ruta                         | Uso interno                                                |
+| ------------------------------------- | ---------------------------------------------------------- |
+| `GET /interno/clientes`               | Selector de id/nombre; sin telefono, email ni edicion.     |
+| `GET/POST /interno/pagos`             | Consultar y registrar importes recibidos asociados.       |
+| `GET/POST /interno/gym/membresias`    | Consultar y registrar fechas; estado calculado al consultar. |
+| `GET/POST /interno/gym/asistencias`   | Registrar asistencia presencial con hora del servidor.    |
+| `GET/POST /interno/torneos`           | Crear y consultar torneos operativos.                      |
+| `GET /interno/torneos/:id`            | Consultar equipos, marcadores y estadisticas basicas.      |
+| `POST /interno/torneos/:id/equipos`   | Cargar equipos manualmente.                                |
+| `POST /interno/torneos/:id/partidos`  | Cargar resultados manuales, sin fixture automatico.        |
+| `POST /turnos/:id/confirmar`          | Confirmar turno pendiente como personal.                   |
+| `POST /turnos/:id/cancelar`           | Cancelar turno pendiente o confirmado como personal.       |
+
+El tab de Usuarios solo aparece para admin y consume `POST /auth/users`. Los pagos no calculan precios ni recargos; la asistencia no se bloquea por membresia vencida. Las estadisticas de torneos cubren partidos y goles, no puntos/desempates. Los ejemplos de torneos publicos siguen marcados como referencia y no se mezclan con estos datos internos.
 
 ### Contenido publico
 
@@ -94,9 +113,9 @@ Home muestra los torneos devueltos por la API; Gym publica membresia general y h
 
 ## Pruebas
 
-`npm --prefix frontend test`: once pruebas automaticas de autenticacion, servicios HTTP, fechas locales y validaciones.
+`npm --prefix frontend test`: trece pruebas automaticas de autenticacion, servicios HTTP, fechas locales y validaciones.
 
-`npm --prefix backend test`: dieciocho pruebas de autenticacion, turnos, contratos publicos y consultas simuladas.
+`npm --prefix backend test`: veinte pruebas de autenticacion, turnos, contratos publicos, operaciones internas y persistencia.
 
 `npm --prefix frontend run build`: compilacion de produccion, incluyendo la fotografia en el bundle.
 
@@ -119,14 +138,17 @@ Verificaciones con el contrato actual:
 3. Pruebas HTTP aisladas con sesiones y repositorios temporales verifican propiedad, roles, origen confiable, sanitizacion publica, IDs internos existentes y conflictos.
 4. Pruebas HTTP de endpoints Gym, paquetes, torneos, detalle y consulta de cumpleaños autenticada, sin persistencia ni bloqueo.
 5. Navegador: Home, Gym, Cumpleanos, Torneos y Sobre Nosotros cargan sin errores de API a 1440 px; las cinco rutas no desbordan el viewport a 390 px.
+6. Con una sesion temporal de admin, el navegador verifico el alta de empleado y el acceso a Usuarios; el empleado no vio esa accion y pudo registrar membresia, asistencia, pago y torneo con resultado.
+7. El empleado confirmo y cancelo un turno desde la lista; los cambios se reflejaron sin eliminar el registro. Un cliente autenticado fue redirigido fuera de `/gestion`.
+8. `/gestion` y `/turnos` se verificaron a 1440 px y 390 px, sin desbordamiento horizontal.
 
 Los registros temporales de las pruebas se eliminaron al finalizar.
 
 ## Limites y recursos
 
-El backend guarda las reservas en memoria. La disponibilidad es publica y saneada; cada cliente consulta unicamente sus reservas y el personal puede gestionar el listado completo. La sesion determina el cliente al reservar; solo el personal puede editar o eliminar. Login/Register, turnos y frontend publico conectado estan implementados. Los paneles internos de empleado/admin, registros operativos de membresia/pagos/asistencia y fixture real siguen pendientes.
+El backend guarda las reservas en memoria; pagos, membresias, asistencias, torneos, equipos y partidos internos persisten en `backend/data/operations.json`. La disponibilidad es publica y saneada; cada cliente consulta unicamente sus reservas y el personal gestiona el listado. Login/Register, turnos por rol, frontend publico y panel interno estan implementados.
 
-Las consultas por WhatsApp se simularan para la entrega, sin numero real, enlaces externos ni mensajes enviados. Los paneles de empleado y administrador quedan para una etapa posterior. Contrato y pruebas de autenticacion: [backend/README.md](../backend/README.md).
+Las consultas por WhatsApp se simulan, sin numero real, enlaces externos ni mensajes enviados. No hay cobros online, precios calculados, fixture automatico ni tabla de puntos. Contratos y permisos: [backend/README.md](../backend/README.md).
 
 La comprobacion de superposicion del frontend mejora la experiencia y el backend vuelve a validarla antes de crear o editar, para impedir conflictos concurrentes en esta instancia local. La persistencia de turnos sigue en memoria.
 

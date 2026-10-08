@@ -118,7 +118,7 @@ Referencias visuales compartidas: [Proyecto/imagenes_referencia](imagenes_refere
 - [TurnosProvider](../frontend/src/components/TurnosProvider.jsx): disponibilidad publica y listas privadas por rol.
 - [Servicio de turnos](../frontend/src/services/turnos.js): fetch centralizado con credenciales de sesion.
 - [Reserva](../frontend/src/pages/ReservaPage.jsx) y [gestion de turnos](../frontend/src/pages/TurnosPage.jsx).
-- [Secciones informativas](../frontend/src/pages/InfoPage.jsx): Gym, Cumpleanos y Torneos siguen como placeholders; los contratos de API ya estan disponibles.
+- [Secciones publicas](../frontend/src/pages/InfoPage.jsx): Gym, Cumpleanos, Torneos y Nosotros consumen los contratos publicos. [GestionPage](../frontend/src/pages/GestionPage.jsx) cubre pagos, Gym, torneos y cuentas internas segun rol.
 
 El Home no esta validado completamente contra Figma. Su foto es una referencia de Unsplash, no una imagen comprobada del establecimiento ni una ilustracion exportada del diseno.
 
@@ -159,8 +159,8 @@ La grilla consume disponibilidad publica. Los clientes ven solo sus reservas y n
 | Completar contratos y endpoints publicos | Completada | Horarios destacados, paquetes y torneos de referencia; mock sin bloqueo.      |
 | Completar frontend publico conectado    | Completada | Home, Gym, Cumpleanos, Torneos y Nosotros con servicios existentes.           |
 | Implementar backend interno por rol      | Completada | Turnos, pagos, membresias, asistencias y torneos manuales con persistencia.     |
-| Implementar frontend interno por rol    | Siguiente  | Vistas de empleado/admin conectadas al backend y diferenciadas por rol.        |
-| Verificar y documentar entrega completa  | Pendiente  | Pruebas, accesibilidad, responsive y contraste con las consignas.             |
+| Implementar frontend interno por rol    | Completada | Panel de empleado/admin, altas admin y acciones de turnos conectadas.          |
+| Verificar y documentar entrega completa | Siguiente  | Pruebas, accesibilidad, responsive y contraste con las consignas.              |
 
 ### Login/Register implementado
 
@@ -180,22 +180,22 @@ Home, Gym, Cumpleanos, Torneos y Sobre Nosotros consumen los endpoints disponibl
 
 Verificado con 11 pruebas frontend, build de produccion y navegador a 1440 px y 390 px sin desbordamiento horizontal en las cinco paginas.
 
-### Siguiente tarea concreta: frontend de empleado/admin
+### Siguiente tarea concreta: verificacion final de entrega
 
 #### Punto de reanudacion
 
-Estado al 8 de octubre de 2026: el frontend publico sigue conectado y validado. El backend interno ya esta implementado con pruebas HTTP; antes de iniciar esta etapa, confirmar que su commit separado este publicado en `origin/main`.
+Estado al 8 de octubre de 2026: backend interno publicado en `origin/main`, commit `cde3d32` (`Implementa operaciones internas por rol`). Frontend interno implementado y validado localmente; publicar su commit separado antes de iniciar la verificacion final.
 
-La API incluye autenticacion (`/auth/*`), turnos por rol (`/turnos/*`), operaciones internas (`/interno/*`) y lectura publica/consulta simulada (`/gym`, `/cumpleanos/*`, `/torneos/*`). El frontend interno debe consumir los contratos existentes, no duplicar reglas. Empleado y admin operan turnos, pagos, membresias, asistencias y torneos; solo admin crea usuarios internos. `GET /interno/clientes` es una consulta privada de solo lectura con id/nombre para asociar registros.
+La API incluye autenticacion (`/auth/*`), turnos por rol (`/turnos/*`), operaciones internas (`/interno/*`) y lectura publica/consulta simulada (`/gym`, `/cumpleanos/*`, `/torneos/*`). El frontend consume esos contratos. Empleado y admin operan turnos, pagos, membresias, asistencias y torneos; solo admin crea usuarios internos. `GET /interno/clientes` es una consulta privada de solo lectura con id/nombre para asociar registros.
 
-Archivos de entrada: [App](../frontend/src/App.jsx), [AuthProvider](../frontend/src/components/AuthProvider.jsx), [Layout](../frontend/src/components/Layout.jsx), [servicios frontend](../frontend/src/services/) y [backend README](../backend/README.md). Revisar rutas y convenciones actuales antes de añadir navegacion o componentes.
+Archivos para revisar la entrega: [App](../frontend/src/App.jsx), [GestionPage](../frontend/src/pages/GestionPage.jsx), [TurnosPage](../frontend/src/pages/TurnosPage.jsx), [backend README](../backend/README.md), [Entrega3](Entrega3.md) y las consignas originales disponibles en el repositorio.
 
 #### Orden de trabajo
 
-1. Construir las vistas internas consumiendo `/turnos/*` y `/interno/*`, mostrando operaciones solo con una sesion real de empleado/admin.
-2. Integrar registro manual de pagos, periodos de membresia, asistencia presencial, torneos/equipos/partidos y transiciones de estado de turnos.
-3. Verificar en navegador el acceso permitido a empleado y admin y el rechazo a clientes; revisar estados de carga, error, vacio y formularios.
-4. Ejecutar pruebas frontend, build y revision responsive a 1440 px y 390 px; publicar esta etapa con su propio commit/push.
+1. Revisar consignas, requisitos de accesibilidad/contraste y fidelidad visual contra las referencias disponibles.
+2. Ejecutar backend/frontend tests y build; volver a revisar errores y diff.
+3. Completar los estados de carga/error/vacio no cubiertos y una revision final responsive de todas las rutas.
+4. Publicar la etapa frontend con su commit/push propio y verificar el estado de `origin/main`.
 
 #### Limites y decisiones pendientes
 
@@ -208,6 +208,12 @@ No hay cobro online ni envio real de WhatsApp. Los pagos internos registran un i
 Los cambios de estado de turnos son exclusivos de empleado/admin: pendiente puede confirmarse o cancelarse, confirmado puede cancelarse y cancelado es terminal. Las operaciones de pagos, membresias, asistencias, torneos, equipos y partidos se guardan en `backend/data/operations.json`, excluido de Git. Las consultas publicas de torneos siguen entregando solo datos de referencia; no se mezclan registros internos.
 
 Verificado con la suite backend: 20 pruebas; incluye permisos, transiciones, persistencia, validacion de pagos/membresias y carga manual de resultados. La generacion automatica de cruces sigue pendiente de definir formato, desempates y manejo de cantidades impares.
+
+### Frontend interno implementado
+
+`/gestion` ofrece secciones para pagos, membresias/asistencia y torneos; admin ve ademas el alta de usuarios internos. Turnos tiene acciones de confirmar, reprogramar y cancelar con confirmacion antes de cancelar. La lista de clientes privada entrega solo id/nombre.
+
+Verificado con 13 pruebas frontend, build de produccion y navegador autenticado: admin crea empleado, empleado opera Gym/pagos/torneos y cliente no accede al panel. Se probaron turnos y ausencia de desbordamiento horizontal a 1440 px y 390 px.
 
 ## 6. Ejecucion y comprobaciones
 
@@ -236,7 +242,7 @@ npm --prefix frontend run build
 Estado verificado al cerrar la implementacion:
 
 - Backend: veinte pruebas de servicio, HTTP, sesiones, permisos, contratos publicos, operaciones internas y persistencia pasaron.
-- Frontend: once pruebas de servicios y validacion, y compilacion de produccion pasaron con las paginas publicas conectadas.
+- Frontend: trece pruebas de servicios y validacion, y compilacion de produccion pasaron con las paginas publicas e internas conectadas.
 - Se verificaron con navegador los flujos originales de crear, editar, cancelar eliminacion y eliminar turnos; errores de API, reintento, Escape, restauracion de foco, movil y carga de imagen.
 - APIs públicas probadas: Gym, paquetes, torneos y detalle; consulta de cumpleaños requiere cliente y no confirma ni ocupa la cancha. No se crearon cuentas permanentes durante las pruebas.
 
@@ -250,7 +256,7 @@ El backend no carga `.env` automaticamente. Configurar variables antes de inicia
 
 ## 7. Riesgos y pendientes que no deben ocultarse
 
-- Login/Register, turnos por rol, frontend publico y backend interno estan integrados. La prioridad inmediata es construir el frontend de empleado/admin.
+- Login/Register, turnos por rol, frontend publico y panel interno estan integrados. La prioridad inmediata es la verificacion final contra consignas y referencias.
 - Siguen pendientes el horario completo de Gym y la generacion automatica de fixture; el backend permite cargar manualmente resultados operativos y registra membresias/asistencias.
 - Cumpleanos y reservas comparten cancha; no validar su disponibilidad como recursos independientes al confirmar ocupaciones.
 - Persistencia de cuentas en archivo y sesiones en memoria son para una sola instancia local, no para produccion.

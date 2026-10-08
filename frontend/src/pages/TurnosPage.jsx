@@ -2,11 +2,12 @@ import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import {
     CalendarDays,
+    Ban,
+    CheckCircle2,
     Pencil,
     Plus,
     RefreshCw,
     Search,
-    Trash2,
     LoaderCircle,
 } from "lucide-react";
 import { useTurnos } from "../components/TurnosProvider.jsx";
@@ -18,13 +19,13 @@ import { formatDate } from "../utils/turnos.js";
 import { useAuth } from "../components/AuthProvider.jsx";
 
 export default function TurnosPage() {
-    const { turnos, loading, error, reload, remove } = useTurnos();
+    const { turnos, loading, error, reload, transition } = useTurnos();
     const { user, loading: authLoading } = useAuth();
     const { notify } = useNotifications();
     const [search, setSearch] = useState("");
     const [status, setStatus] = useState("");
     const [editing, setEditing] = useState(null);
-    const [deleting, setDeleting] = useState(null);
+    const [canceling, setCanceling] = useState(null);
     const [busy, setBusy] = useState(false);
     const isStaff = user && ["empleado", "admin"].includes(user.rol);
     const filtered = turnos
@@ -49,11 +50,11 @@ export default function TurnosPage() {
         );
     if (!user) return <Navigate to="/cuenta" replace />;
 
-    async function confirmDelete() {
+    async function changeStatus(turno, action) {
         setBusy(true);
         try {
-            await remove(deleting.id);
-            setDeleting(null);
+            await transition(turno.id, action);
+            setCanceling(null);
         } catch (failure) {
             notify(failure.message, "error");
         } finally {
@@ -172,26 +173,37 @@ export default function TurnosPage() {
                                         {isStaff && (
                                             <td>
                                                 <div className="row-actions">
-                                                <button
-                                                    className="icon-button"
-                                                    title={`Editar turno ${turno.id}`}
-                                                    aria-label={`Editar turno ${turno.id}`}
-                                                    onClick={() =>
-                                                        setEditing(turno)
-                                                    }
-                                                >
-                                                    <Pencil size={17} />
-                                                </button>
-                                                <button
-                                                    className="icon-button danger-icon"
-                                                    title={`Eliminar turno ${turno.id}`}
-                                                    aria-label={`Eliminar turno ${turno.id}`}
-                                                    onClick={() =>
-                                                        setDeleting(turno)
-                                                    }
-                                                >
-                                                    <Trash2 size={17} />
-                                                </button>
+                                                    {turno.estado !== "Cancelado" && (
+                                                        <button
+                                                            className="icon-button"
+                                                            title={`Reprogramar turno ${turno.id}`}
+                                                            aria-label={`Reprogramar turno ${turno.id}`}
+                                                            onClick={() => setEditing(turno)}
+                                                        >
+                                                            <Pencil size={17} />
+                                                        </button>
+                                                    )}
+                                                    {turno.estado === "Pendiente" && (
+                                                        <button
+                                                            className="icon-button"
+                                                            title={`Confirmar turno ${turno.id}`}
+                                                            aria-label={`Confirmar turno ${turno.id}`}
+                                                            disabled={busy}
+                                                            onClick={() => changeStatus(turno, "confirmar")}
+                                                        >
+                                                            <CheckCircle2 size={17} />
+                                                        </button>
+                                                    )}
+                                                    {turno.estado !== "Cancelado" && (
+                                                        <button
+                                                            className="icon-button danger-icon"
+                                                            title={`Cancelar turno ${turno.id}`}
+                                                            aria-label={`Cancelar turno ${turno.id}`}
+                                                            onClick={() => setCanceling(turno)}
+                                                        >
+                                                            <Ban size={17} />
+                                                        </button>
+                                                    )}
                                                 </div>
                                             </td>
                                         )}
@@ -231,37 +243,36 @@ export default function TurnosPage() {
                     />
                 </Modal>
             )}
-            {deleting && (
+            {canceling && (
                 <Modal
-                    title="Eliminar turno"
+                    title="Cancelar turno"
                     busy={busy}
-                    onClose={() => setDeleting(null)}
+                    onClose={() => setCanceling(null)}
                 >
                     <p>
-                        Vas a eliminar el turno #{deleting.id} del{" "}
-                        {formatDate(deleting.fecha)}, de {deleting.horaInicio} a{" "}
-                        {deleting.horaFin}.
+                        Vas a cancelar el turno #{canceling.id} del{" "}
+                        {formatDate(canceling.fecha)}, de {canceling.horaInicio} a{" "}
+                        {canceling.horaFin}. El registro se conservara.
                     </p>
-                    <p className="muted">Esta accion no se puede deshacer.</p>
                     <div className="modal-actions">
                         <button
                             className="button secondary"
                             disabled={busy}
-                            onClick={() => setDeleting(null)}
+                            onClick={() => setCanceling(null)}
                         >
-                            Cancelar
+                            Volver
                         </button>
                         <button
                             className="button danger"
                             disabled={busy}
-                            onClick={confirmDelete}
+                            onClick={() => changeStatus(canceling, "cancelar")}
                         >
                             {busy ? (
                                 <LoaderCircle className="spin" size={17} />
                             ) : (
-                                <Trash2 size={17} />
+                                <Ban size={17} />
                             )}
-                            {busy ? "Eliminando..." : "Eliminar turno"}
+                            {busy ? "Cancelando..." : "Confirmar cancelacion"}
                         </button>
                     </div>
                 </Modal>

@@ -73,7 +73,7 @@ La reserva semanal respeta la composición del [wireframe original de Figma](htt
 
 La API guarda las reservas en memoria: reiniciar el backend elimina los turnos. La autenticación incluye registro, login, logout, sesión actual y creación de cuentas internas por administradores; las cuentas persisten en un archivo local. El frontend público y Login/Register consumen la API. Contrato y creación del primer administrador: [backend/README.md](backend/README.md).
 
-Las operaciones internas protegidas por rol permiten gestionar turnos, registrar pagos recibidos, membresías, asistencias y datos operativos de torneos. No hay cobros online, cálculo de precios, fixture automático ni mensajes reales de WhatsApp. La foto del Home es una referencia, no una fotografía verificada del establecimiento ni una ilustración exportada de Figma.
+Las operaciones internas protegidas por rol están disponibles en `/gestion` para empleados y administradores; solo admin puede crear cuentas internas. Permiten gestionar turnos, registrar pagos recibidos, membresías, asistencias y datos operativos de torneos. No hay cobros online, cálculo de precios, fixture automático ni mensajes reales de WhatsApp. La foto del Home es una referencia, no una fotografía verificada del establecimiento ni una ilustración exportada de Figma.
 
 Las validaciones de superposición se realizan en el frontend; no garantizan exclusión entre usuarios concurrentes porque el backend todavía no impone esa regla. No debe publicarse como sistema de reservas definitivo sin validación transaccional, persistencia y control de acceso en el servidor.
 

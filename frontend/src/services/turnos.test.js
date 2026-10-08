@@ -6,6 +6,8 @@ import {
     getTurnos,
     createTurno,
     updateTurno,
+    confirmTurno,
+    cancelTurno,
     deleteTurno,
 } from "./turnos.js";
 
@@ -21,6 +23,8 @@ test("los servicios respetan las rutas, metodos y formato de la API", async (con
     assert.deepEqual(await getTurnos(), turno);
     await createTurno(turno);
     await updateTurno(1, turno);
+    await confirmTurno(1);
+    await cancelTurno(1);
     await deleteTurno(1);
     assert.equal(calls[0].url, "http://localhost:3000/turnos/disponibilidad");
     assert.equal(calls[0].credentials, "include");
@@ -30,7 +34,11 @@ test("los servicios respetan las rutas, metodos y formato de la API", async (con
     assert.deepEqual(JSON.parse(calls[3].body), turno);
     assert.equal(calls[4].url, "http://localhost:3000/turnos/1");
     assert.equal(calls[4].method, "PUT");
-    assert.equal(calls[5].method, "DELETE");
+    assert.equal(calls[5].url, "http://localhost:3000/turnos/1/confirmar");
+    assert.equal(calls[5].method, "POST");
+    assert.equal(calls[6].url, "http://localhost:3000/turnos/1/cancelar");
+    assert.equal(calls[6].method, "POST");
+    assert.equal(calls[7].method, "DELETE");
 });
 
 test("propaga errores del backend", async (context) => {

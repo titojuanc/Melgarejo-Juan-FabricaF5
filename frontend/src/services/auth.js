@@ -40,4 +40,6 @@ export const login = (data) =>
     request("/login", { method: "POST", body: JSON.stringify(data) });
 export const register = (data) =>
     request("/register", { method: "POST", body: JSON.stringify(data) });
+export const createStaffUser = (data) =>
+    request("/users", { method: "POST", body: JSON.stringify(data) });
 export const logout = () => request("/logout", { method: "POST" });

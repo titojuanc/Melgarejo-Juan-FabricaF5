@@ -92,6 +92,23 @@ export function TurnosProvider({ children }) {
         notify("Turno eliminado correctamente.");
     }
 
+    async function transition(id, action) {
+        const turno =
+            action === "confirmar"
+                ? await service.confirmTurno(id)
+                : await service.cancelTurno(id);
+        setTurnos((current) =>
+            current.map((item) => (item.id === id ? turno : item)),
+        );
+        await reloadAvailability();
+        notify(
+            action === "confirmar"
+                ? "Turno confirmado correctamente."
+                : "Turno cancelado correctamente.",
+        );
+        return turno;
+    }
+
     return (
         <TurnosContext.Provider
             value={{
@@ -101,6 +118,7 @@ export function TurnosProvider({ children }) {
                 reload,
                 save,
                 remove,
+                transition,
                 availability,
                 availabilityLoading,
                 availabilityError,
