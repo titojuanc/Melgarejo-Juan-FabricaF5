@@ -72,6 +72,25 @@ export class OperationsRepository {
             [collection]: [...this.state[collection], record],
             [counter]: id + 1,
         };
+        this.save(nextState);
+        return record;
+    }
+
+    update(collection, id, data) {
+        const current = this.findById(collection, id);
+        if (!current) return null;
+        const updated = { ...current, ...data };
+        const nextState = {
+            ...this.state,
+            [collection]: this.state[collection].map((record) =>
+                record.id === id ? updated : record,
+            ),
+        };
+        this.save(nextState);
+        return updated;
+    }
+
+    save(nextState) {
         mkdirSync(dirname(this.filePath), { recursive: true });
         const temporaryPath = `${this.filePath}.tmp`;
         writeFileSync(temporaryPath, JSON.stringify(nextState, null, 4), {
@@ -79,7 +98,6 @@ export class OperationsRepository {
         });
         renameSync(temporaryPath, this.filePath);
         this.state = nextState;
-        return record;
     }
 
     createPayment(data) {
@@ -116,6 +134,8 @@ export class OperationsRepository {
             data.fechaInicio,
             data.fechaFin,
             data.estado,
+            data.formato,
+            data.intervaloDias,
         ));
     }
 
@@ -135,9 +155,24 @@ export class OperationsRepository {
             data.equipoLocalId,
             data.equipoVisitanteId,
             data.fecha,
-            data.golesLocal,
-            data.golesVisitante,
+            data.golesLocal ?? null,
+            data.golesVisitante ?? null,
+            data.ronda ?? 1,
+            data.estado ??
+                (data.golesLocal !== undefined && data.golesVisitante !== undefined
+                    ? "Finalizado"
+                    : "Pendiente"),
+            data.penalesLocal ?? null,
+            data.penalesVisitante ?? null,
         ));
+    }
+
+    updateTournament(id, data) {
+        return this.update("torneos", id, data);
+    }
+
+    updateMatch(id, data) {
+        return this.update("partidos", id, data);
     }
 }
 

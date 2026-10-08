@@ -265,6 +265,11 @@ test("HTTP: el personal confirma y cancela turnos con transiciones validas", asy
     });
     assert.equal(canceled.response.status, 200);
     assert.equal(canceled.body.data.estado, "Cancelado");
+    const refreshedList = await request("/turnos", { cookie: staff.cookie });
+    assert.equal(
+        refreshedList.body.data.find((turno) => turno.id === turnId).estado,
+        "Cancelado",
+    );
     assert.equal(
         (
             await request(`/turnos/${turnId}`, {
@@ -284,4 +289,16 @@ test("HTTP: el personal confirma y cancela turnos con transiciones validas", asy
         ).response.status,
         409,
     );
+    const replacement = await request("/turnos", {
+        method: "POST",
+        cookie: registered.cookie,
+        data: {
+            fecha: "2099-12-31",
+            horaInicio: "20:00",
+            horaFin: "21:00",
+            cantidadJugadores: 10,
+            incluyeLuces: false,
+        },
+    });
+    assert.equal(replacement.response.status, 201);
 });

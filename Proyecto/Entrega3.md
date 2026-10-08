@@ -91,11 +91,12 @@ Empleado y admin utilizan `/gestion` para registrar pagos recibidos, períodos d
 | `GET/POST /interno/torneos`           | Crear y consultar torneos operativos.                      |
 | `GET /interno/torneos/:id`            | Consultar equipos, marcadores y estadisticas basicas.      |
 | `POST /interno/torneos/:id/equipos`   | Cargar equipos manualmente.                                |
-| `POST /interno/torneos/:id/partidos`  | Cargar resultados manuales, sin fixture automatico.        |
+| `POST /interno/torneos/:id/fixture`  | Generar liga a una rueda o copa eliminatoria.              |
+| `PUT /interno/torneos/:id/partidos/:partidoId` | Registrar el resultado del partido programado. |
 | `POST /turnos/:id/confirmar`          | Confirmar turno pendiente como personal.                   |
 | `POST /turnos/:id/cancelar`           | Cancelar turno pendiente o confirmado como personal.       |
 
-El tab de Usuarios solo aparece para admin y consume `POST /auth/users`. Los pagos no calculan precios ni recargos; la asistencia no se bloquea por membresia vencida. Las estadisticas de torneos cubren partidos y goles, no puntos/desempates. Los ejemplos de torneos publicos siguen marcados como referencia y no se mezclan con estos datos internos.
+El tab de Usuarios solo aparece para admin y consume `POST /auth/users`. Los pagos no calculan precios ni recargos; la asistencia no se bloquea por membresia vencida. La liga genera una rueda con intervalo configurable, descansos para equipos impares y tabla 3/1/0 ordenada por diferencia de gol, goles a favor y nombre. La copa sortea la llave, avanza ganadores cuando se cargan todos los resultados de una ronda y exige penales para resolver empates. Los ejemplos publicos siguen marcados como referencia y separados de los operativos.
 
 ### Contenido publico
 
@@ -104,18 +105,18 @@ El tab de Usuarios solo aparece para admin y consume `POST /auth/users`. Los pag
 | `GET /gym`                     | Membresia normal y cuatro horarios destacados; horario completo no disponible. |
 | `GET /cumpleanos/paquetes`     | Basico, Full y Premium segun referencia; no hay precios publicados. |
 | `POST /cumpleanos/consultas`   | Cliente autenticado; valida 48 horas y devuelve consulta simulada sin persistir ni bloquear cancha. |
-| `GET /torneos`                 | Conteos/estados de referencia, marcados `datosDeReferencia`.         |
-| `GET /torneos/:id`             | Tabla parcial disponible; partidos vacios si no hay fixture real.   |
+| `GET /torneos`                 | Referencias Figma y torneos operativos, con tablas y fixtures vigentes. |
+| `GET /torneos/:id`             | Detalle publico por id; sin datos personales de clientes.             |
 
-Las capturas incluyen valores de ejemplo para Torneos, no registros operativos. No se exponen DNI ni se inventan fixture, resultados o precios. El horario completo, vencimientos, pagos y asistencias de Gym no estan disponibles como datos reales.
+Las capturas incluyen valores de ejemplo para Torneos, marcados como referencia y separados de los operativos. No se exponen DNI ni datos de contacto. El horario completo de Gym no esta disponible.
 
-Home muestra los torneos devueltos por la API; Gym publica membresia general y horarios destacados; Cumpleanos permite elegir paquete y enviar una consulta simulada con cuenta de cliente; Torneos abre un detalle con tabla disponible y estado vacio para fixture; Sobre Nosotros usa la ubicacion documentada. No se muestran estados personales de cuota, pagos o asistencia.
+Home muestra los torneos devueltos por la API; Gym publica membresia general y horarios destacados; Cumpleanos permite elegir paquete y enviar una consulta simulada con cuenta de cliente; Torneos muestra referencias y datos operativos, con fixture por ronda, descansos, resultados, tabla de liga y campeon de copa; Sobre Nosotros usa la ubicacion documentada. No se muestran estados personales de cuota, pagos o asistencia.
 
 ## Pruebas
 
 `npm --prefix frontend test`: trece pruebas automaticas de autenticacion, servicios HTTP, fechas locales y validaciones.
 
-`npm --prefix backend test`: veinte pruebas de autenticacion, turnos, contratos publicos, operaciones internas y persistencia.
+`npm --prefix backend test`: incluye pruebas de autenticacion, turnos, contratos publicos, persistencia, algoritmos de fixtures y tablas.
 
 `npm --prefix frontend run build`: compilacion de produccion, incluyendo la fotografia en el bundle.
 
@@ -138,9 +139,10 @@ Verificaciones con el contrato actual:
 3. Pruebas HTTP aisladas con sesiones y repositorios temporales verifican propiedad, roles, origen confiable, sanitizacion publica, IDs internos existentes y conflictos.
 4. Pruebas HTTP de endpoints Gym, paquetes, torneos, detalle y consulta de cumpleaños autenticada, sin persistencia ni bloqueo.
 5. Navegador: Home, Gym, Cumpleanos, Torneos y Sobre Nosotros cargan sin errores de API a 1440 px; las cinco rutas no desbordan el viewport a 390 px.
-6. Con una sesion temporal de admin, el navegador verifico el alta de empleado y el acceso a Usuarios; el empleado no vio esa accion y pudo registrar membresia, asistencia, pago y torneo con resultado.
-7. El empleado confirmo y cancelo un turno desde la lista; los cambios se reflejaron sin eliminar el registro. Un cliente autenticado fue redirigido fuera de `/gestion`.
-8. `/gestion` y `/turnos` se verificaron a 1440 px y 390 px, sin desbordamiento horizontal.
+6. Con una sesion temporal de admin, el navegador verifico el alta de empleado y el acceso a Usuarios; el empleado no vio esa accion y pudo registrar membresia, asistencia, pago y torneo.
+7. Se verificaron en API y navegador los cruces de liga, tabla 3/1/0 tras cada marcador, descansos, pases de copa, avance de rondas y campeon publico.
+8. El empleado confirmo y cancelo un turno; `GET /turnos` reflejo el estado persistido y la disponibilidad se actualizo. Un cliente autenticado fue redirigido fuera de `/gestion`.
+9. `/gestion`, `/turnos` y `/torneos` se verificaron a 1440 px y 390 px, sin desbordamiento horizontal.
 
 Los registros temporales de las pruebas se eliminaron al finalizar.
 
@@ -148,7 +150,7 @@ Los registros temporales de las pruebas se eliminaron al finalizar.
 
 El backend guarda las reservas en memoria; pagos, membresias, asistencias, torneos, equipos y partidos internos persisten en `backend/data/operations.json`. La disponibilidad es publica y saneada; cada cliente consulta unicamente sus reservas y el personal gestiona el listado. Login/Register, turnos por rol, frontend publico y panel interno estan implementados.
 
-Las consultas por WhatsApp se simulan, sin numero real, enlaces externos ni mensajes enviados. No hay cobros online, precios calculados, fixture automatico ni tabla de puntos. Contratos y permisos: [backend/README.md](../backend/README.md).
+Las consultas por WhatsApp se simulan, sin numero real, enlaces externos ni mensajes enviados. No hay cobros online ni precios calculados. Contratos y permisos: [backend/README.md](../backend/README.md).
 
 La comprobacion de superposicion del frontend mejora la experiencia y el backend vuelve a validarla antes de crear o editar, para impedir conflictos concurrentes en esta instancia local. La persistencia de turnos sigue en memoria.
 

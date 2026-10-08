@@ -54,7 +54,7 @@ export function createApp({
         })
     );
     app.use("/auth", createAuthRoutes(auth, authLimit));
-    app.use(createPublicInfoRoutes(publicInfo, auth));
+    app.use(createPublicInfoRoutes(publicInfo, auth, operationsApi));
     app.use("/interno", createOperationsRoutes(operationsApi, auth));
     app.use(createRoutes(turnoApi, auth));
 

@@ -33,8 +33,8 @@ Todas las respuestas mantienen `{ success: true, data }` o `{ success: false, me
 | `GET /gym`                    | Publico                             | Membresia normal y horarios destacados visibles en referencia.   |
 | `GET /cumpleanos/paquetes`    | Publico                             | Basico, Full y Premium; no incluye precios.                      |
 | `POST /cumpleanos/consultas`  | Cliente y origen permitido          | Consulta simulada con 48 h de anticipacion; no persiste ni reserva cancha. |
-| `GET /torneos`                | Publico                             | Conteos/estados de referencia marcados `datosDeReferencia`.      |
-| `GET /torneos/:id`            | Publico                             | Detalle y tabla parcial; sin DNI ni partidos inventados.         |
+| `GET /torneos`                | Publico                             | Referencias Figma y torneos operativos con fixture/tabla actualizados. |
+| `GET /torneos/:id`            | Publico                             | Detalle, rondas, resultados, descansos y tabla pública.          |
 
 El horario completo del gimnasio no se ve en la captura. Los torneos son datos ilustrativos de Figma, no registros reales. Una consulta de cumpleaños valida el paquete y fecha/hora, pero no confirma el evento, no se guarda y no bloquea la cancha.
 
@@ -63,9 +63,12 @@ Las rutas bajo `/interno` requieren sesion de empleado o administrador. Ambos ro
 | `GET/POST /interno/torneos`          | Consultar y crear torneos operativos.              |
 | `GET /interno/torneos/:id`           | Consultar equipos, partidos y estadisticas.        |
 | `POST /interno/torneos/:id/equipos`  | Cargar un equipo y su cantidad de jugadores.        |
-| `POST /interno/torneos/:id/partidos` | Cargar manualmente fecha y resultado de un partido. |
+| `POST /interno/torneos/:id/fixture` | Generar una vez la liga o llave de copa.            |
+| `PUT /interno/torneos/:id/partidos/:partidoId` | Cargar el resultado de un partido programado. |
 
-Los pagos guardan el importe ingresado por el personal y deben asociarse a un turno o una membresia; no calculan precios, senas ni recargos. Las membresias registran fechas explicitas, sin tarifa. La asistencia no se bloquea por estado de membresia. Los partidos y resultados son manuales: no se genera fixture ni tabla de puntos/desempates. Las estadisticas operativas se limitan a partidos jugados, ganados, empatados, perdidos y goles.
+Los pagos guardan el importe ingresado por el personal y deben asociarse a un turno o una membresia; no calculan precios, senas ni recargos. Las membresias registran fechas explicitas, sin tarifa. La asistencia no se bloquea por estado de membresia.
+
+Cada torneo define formato (`liga` o `copa`), fechas e intervalo de dias entre partidos. La liga genera una rueda todos-contra-todos, con descansos cuando la cantidad de equipos es impar. La tabla cuenta partidos finalizados con 3/1/0 puntos y desempata por diferencia de gol, goles a favor y nombre. La copa sortea los equipos, asigna pases automaticos para completar la llave y crea cada ronda siguiente cuando se cargan todos los resultados de la ronda actual; un empate requiere ganador por penales y al terminar se publica el campeon. La fecha final debe alcanzar para todos los partidos. Los torneos operativos aparecen en las rutas publicas; los datos de referencia Figma siguen identificados y separados. Ninguna ruta publica expone telefono, email o DNI.
 
 Estos datos se guardan en `backend/data/operations.json`, excluido de Git. No se mezclan con los torneos ilustrativos de las rutas publicas ni se exponen datos personales en ellas.
 La consulta interna de clientes devuelve solo `id` y `nombre`; no permite editar perfiles ni devuelve telefono o email.

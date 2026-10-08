@@ -5,8 +5,12 @@ class Partido {
         equipoLocalId,
         equipoVisitanteId,
         fecha,
-        golesLocal,
-        golesVisitante,
+        golesLocal = null,
+        golesVisitante = null,
+        ronda = 1,
+        estado = "Pendiente",
+        penalesLocal = null,
+        penalesVisitante = null,
     ) {
         this.id = id;
         this.torneoId = torneoId;
@@ -15,6 +19,10 @@ class Partido {
         this.fecha = fecha;
         this.golesLocal = golesLocal;
         this.golesVisitante = golesVisitante;
+        this.ronda = ronda;
+        this.estado = estado;
+        this.penalesLocal = penalesLocal;
+        this.penalesVisitante = penalesVisitante;
     }
 }
 

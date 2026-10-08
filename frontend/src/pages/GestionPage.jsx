@@ -293,6 +293,91 @@ function GymPanel({ clients, memberships, attendances, onChanged }) {
     );
 }
 
+function TournamentFixture({ detail, teamName, onSaveResult, busyMatchId }) {
+    const prefix = useId();
+    const rounds = [...new Set([
+        ...detail.partidos.map((match) => match.ronda || 1),
+        ...detail.descansos.map((bye) => bye.ronda),
+    ])].sort((first, second) => first - second);
+
+    if (!detail.partidos.length) {
+        return <p className="empty-inline">Todavía no hay partidos programados.</p>;
+    }
+
+    return (
+        <div className="tournament-fixture-rounds">
+            {rounds.map((round) => {
+                const roundMatches = detail.partidos.filter(
+                    (match) => (match.ronda || 1) === round,
+                );
+                const roundByes = detail.descansos.filter(
+                    (bye) => bye.ronda === round,
+                );
+                return (
+                    <section className="fixture-round" key={round}>
+                        <div className="fixture-round-heading">
+                            <h4>{detail.formato === "copa" ? `Ronda ${round}` : `Jornada ${round}`}</h4>
+                            {roundByes.length > 0 && (
+                                <span>Descansa: {roundByes.map((bye) => bye.equipo).join(", ")}</span>
+                            )}
+                        </div>
+                        <div className="fixture-match-list">
+                            {roundMatches.map((match) => (
+                                <article className="fixture-match" key={match.id}>
+                                    <div className="fixture-match-heading">
+                                        <time dateTime={match.fecha}>{formatDate(match.fecha)}</time>
+                                        <span className={`status-badge ${match.estado === "Finalizado" ? "status-confirmed" : ""}`}>
+                                            {match.estado === "Finalizado" ? "Finalizado" : "Pendiente"}
+                                        </span>
+                                    </div>
+                                    <p className="fixture-match-teams">
+                                        <strong>{teamName(match.equipoLocalId)}</strong>
+                                        <span>vs.</span>
+                                        <strong>{teamName(match.equipoVisitanteId)}</strong>
+                                    </p>
+                                    {match.estado === "Finalizado" ? (
+                                        <p className="fixture-match-result">
+                                            {match.golesLocal} <span>–</span> {match.golesVisitante}
+                                            {match.penalesLocal !== null && <small>Penales {match.penalesLocal}–{match.penalesVisitante}</small>}
+                                        </p>
+                                    ) : (
+                                        <form
+                                            className={`fixture-result-form ${detail.formato === "copa" ? "cup-result-form" : ""}`}
+                                            onSubmit={(event) => onSaveResult(event, match)}
+                                        >
+                                            <div className="field">
+                                                <label htmlFor={`${prefix}-${match.id}-local`}>Goles {teamName(match.equipoLocalId)}</label>
+                                                <input id={`${prefix}-${match.id}-local`} name="golesLocal" type="number" min="0" step="1" required />
+                                            </div>
+                                            <div className="field">
+                                                <label htmlFor={`${prefix}-${match.id}-visitante`}>Goles {teamName(match.equipoVisitanteId)}</label>
+                                                <input id={`${prefix}-${match.id}-visitante`} name="golesVisitante" type="number" min="0" step="1" required />
+                                            </div>
+                                            {detail.formato === "copa" && (
+                                                <>
+                                                    <div className="field"><label htmlFor={`${prefix}-${match.id}-penales-local`}>Penales {teamName(match.equipoLocalId)} si empatan</label><input id={`${prefix}-${match.id}-penales-local`} name="penalesLocal" type="number" min="0" step="1" /></div>
+                                                    <div className="field"><label htmlFor={`${prefix}-${match.id}-penales-visitante`}>Penales {teamName(match.equipoVisitanteId)} si empatan</label><input id={`${prefix}-${match.id}-penales-visitante`} name="penalesVisitante" type="number" min="0" step="1" /></div>
+                                                </>
+                                            )}
+                                            <button className="button primary" type="submit" disabled={busyMatchId === match.id}>
+                                                {busyMatchId === match.id ? <LoaderCircle className="spin" size={16} /> : <BadgeCheck size={16} />}
+                                                Guardar resultado
+                                            </button>
+                                        </form>
+                                    )}
+                                </article>
+                            ))}
+                        </div>
+                    </section>
+                );
+            })}
+            {detail.campeon && (
+                <p className="tournament-champion"><Trophy size={18} /> Campeón: <strong>{detail.campeon.nombre}</strong></p>
+            )}
+        </div>
+    );
+}
+
 function TournamentsPanel({ tournaments, onChanged }) {
     const prefix = useId();
     const teamPrefix = useId();
@@ -303,9 +388,9 @@ function TournamentsPanel({ tournaments, onChanged }) {
     const [detailLoading, setDetailLoading] = useState(false);
     const [detailError, setDetailError] = useState("");
     const [busy, setBusy] = useState(false);
-    const [newTournament, setNewTournament] = useState({ nombre: "", fechaInicio: "", fechaFin: "", estado: "Inscripciones abiertas" });
+    const [newTournament, setNewTournament] = useState({ nombre: "", fechaInicio: "", fechaFin: "", estado: "Inscripciones abiertas", formato: "liga", intervaloDias: 7 });
     const [newTeam, setNewTeam] = useState({ nombre: "", cantidadJugadores: "" });
-    const [newMatch, setNewMatch] = useState({ equipoLocalId: "", equipoVisitanteId: "", fecha: "", golesLocal: "", golesVisitante: "" });
+    const [busyMatchId, setBusyMatchId] = useState(null);
 
     useEffect(() => {
         if (!selectedId && tournaments.length) setSelectedId(String(tournaments[0].id));
@@ -341,7 +426,7 @@ function TournamentsPanel({ tournaments, onChanged }) {
         try {
             const tournament = await service.createTournament(newTournament);
             setSelectedId(String(tournament.id));
-            setNewTournament({ nombre: "", fechaInicio: "", fechaFin: "", estado: "Inscripciones abiertas" });
+            setNewTournament({ nombre: "", fechaInicio: "", fechaFin: "", estado: "Inscripciones abiertas", formato: "liga", intervaloDias: 7 });
             notify("Torneo creado.");
             await onChanged();
         } catch (error) {
@@ -368,25 +453,42 @@ function TournamentsPanel({ tournaments, onChanged }) {
         }
     }
 
-    async function submitMatch(event) {
-        event.preventDefault();
+    async function generateFixture() {
         if (!selectedId) return;
         setBusy(true);
         try {
-            await service.recordMatch(selectedId, {
-                ...newMatch,
-                equipoLocalId: Number(newMatch.equipoLocalId),
-                equipoVisitanteId: Number(newMatch.equipoVisitanteId),
-                golesLocal: Number(newMatch.golesLocal),
-                golesVisitante: Number(newMatch.golesVisitante),
-            });
-            setNewMatch({ equipoLocalId: "", equipoVisitanteId: "", fecha: "", golesLocal: "", golesVisitante: "" });
-            notify("Resultado cargado.");
-            await refreshDetail();
+            setDetail(await service.generateFixture(selectedId));
+            notify("Fixture generado correctamente.");
+            await onChanged();
         } catch (error) {
             notify(error.message, "error");
         } finally {
             setBusy(false);
+        }
+    }
+
+    async function submitMatchResult(event, match) {
+        event.preventDefault();
+        if (!selectedId) return;
+        setBusyMatchId(match.id);
+        try {
+            const fields = new FormData(event.currentTarget);
+            const resultData = {
+                golesLocal: Number(fields.get("golesLocal")),
+                golesVisitante: Number(fields.get("golesVisitante")),
+            };
+            if (fields.get("penalesLocal") !== "" && fields.get("penalesVisitante") !== "") {
+                resultData.penalesLocal = Number(fields.get("penalesLocal"));
+                resultData.penalesVisitante = Number(fields.get("penalesVisitante"));
+            }
+            const result = await service.recordMatchResult(selectedId, match.id, resultData);
+            setDetail(result.torneo);
+            notify("Resultado cargado; tabla y fixture actualizados.");
+            await onChanged();
+        } catch (error) {
+            notify(error.message, "error");
+        } finally {
+            setBusyMatchId(null);
         }
     }
 
@@ -412,11 +514,14 @@ function TournamentsPanel({ tournaments, onChanged }) {
                 <form className="management-form" onSubmit={submitTournament}>
                     <div className="management-fields tournament-create-fields">
                         <div className="field"><label htmlFor={`${prefix}-nombre`}>Nombre</label><input id={`${prefix}-nombre`} value={newTournament.nombre} onChange={(event) => setNewTournament({ ...newTournament, nombre: event.target.value })} maxLength={100} required /></div>
+                        <div className="field"><label htmlFor={`${prefix}-formato`}>Formato</label><select id={`${prefix}-formato`} value={newTournament.formato} onChange={(event) => setNewTournament({ ...newTournament, formato: event.target.value })}><option value="liga">Liga única</option><option value="copa">Copa eliminatoria</option></select></div>
+                        <div className="field"><label htmlFor={`${prefix}-intervalo`}>Días entre partidos</label><input id={`${prefix}-intervalo`} type="number" min="1" max="365" step="1" value={newTournament.intervaloDias} onChange={(event) => setNewTournament({ ...newTournament, intervaloDias: Number(event.target.value) })} required /></div>
                         <div className="field"><label htmlFor={`${prefix}-inicio`}>Inicio</label><input id={`${prefix}-inicio`} type="date" value={newTournament.fechaInicio} onChange={(event) => setNewTournament({ ...newTournament, fechaInicio: event.target.value })} required /></div>
                         <div className="field"><label htmlFor={`${prefix}-fin`}>Fin</label><input id={`${prefix}-fin`} type="date" value={newTournament.fechaFin} onChange={(event) => setNewTournament({ ...newTournament, fechaFin: event.target.value })} required /></div>
                         <div className="field"><label htmlFor={`${prefix}-estado`}>Estado</label><select id={`${prefix}-estado`} value={newTournament.estado} onChange={(event) => setNewTournament({ ...newTournament, estado: event.target.value })}><option>Inscripciones abiertas</option><option>En Juego</option><option>Finalizado</option></select></div>
                     </div>
                     <button className="button primary" type="submit" disabled={busy}><Plus size={17} /> Crear torneo</button>
+                    <p className="form-hint light-hint">La liga suma 3/1/0 y desempata por goles. La copa sortea pases automáticos y los empates se resuelven por penales. Las fechas usan el intervalo elegido.</p>
                 </form>
             </section>
             <div className="management-toolbar">
@@ -429,32 +534,53 @@ function TournamentsPanel({ tournaments, onChanged }) {
             {detailLoading ? <p className="management-inline-state" role="status"><LoaderCircle className="spin" size={18} /> Cargando torneo...</p> : detailError ? <p className="management-error" role="alert">{detailError}</p> : detail && (
                 <>
                     <div className="management-tournament-meta"><span><Flag size={16} /> {detail.estado}</span><span><CalendarDays size={16} /> {formatDate(detail.fechaInicio)} – {formatDate(detail.fechaFin)}</span><span><Users size={16} /> {detail.equipos.length} equipos</span></div>
-                    <div className="management-columns">
-                        <section className="management-operation" aria-labelledby="new-team-title">
-                            <h3 id="new-team-title">Agregar equipo</h3>
-                            <form className="management-form" onSubmit={submitTeam}>
-                                <div className="form-row"><div className="field"><label htmlFor={`${teamPrefix}-nombre`}>Nombre del equipo</label><input id={`${teamPrefix}-nombre`} value={newTeam.nombre} onChange={(event) => setNewTeam({ ...newTeam, nombre: event.target.value })} required maxLength={100} /></div><div className="field"><label htmlFor={`${teamPrefix}-jugadores`}>Cantidad de jugadores</label><input id={`${teamPrefix}-jugadores`} type="number" min="1" step="1" value={newTeam.cantidadJugadores} onChange={(event) => setNewTeam({ ...newTeam, cantidadJugadores: event.target.value })} required /></div></div>
-                                <button className="button primary" type="submit" disabled={busy}><Plus size={17} /> Agregar equipo</button>
-                            </form>
-                        </section>
-                        <section className="management-operation" aria-labelledby="new-match-title">
-                            <h3 id="new-match-title">Cargar resultado manual</h3>
-                            <form className="management-form" onSubmit={submitMatch}>
-                                <div className="form-row"><div className="field"><label htmlFor={`${matchPrefix}-local`}>Equipo local</label><select id={`${matchPrefix}-local`} value={newMatch.equipoLocalId} onChange={(event) => setNewMatch({ ...newMatch, equipoLocalId: event.target.value })} required><option value="">Seleccionar equipo</option>{detail.equipos.map((team) => <option key={team.id} value={team.id}>{team.nombre}</option>)}</select></div><div className="field"><label htmlFor={`${matchPrefix}-visitante`}>Equipo visitante</label><select id={`${matchPrefix}-visitante`} value={newMatch.equipoVisitanteId} onChange={(event) => setNewMatch({ ...newMatch, equipoVisitanteId: event.target.value })} required><option value="">Seleccionar equipo</option>{detail.equipos.map((team) => <option key={team.id} value={team.id}>{team.nombre}</option>)}</select></div></div>
-                                <div className="form-row management-score-fields"><div className="field"><label htmlFor={`${matchPrefix}-fecha`}>Fecha</label><input id={`${matchPrefix}-fecha`} type="date" min={detail.fechaInicio} max={detail.fechaFin} value={newMatch.fecha} onChange={(event) => setNewMatch({ ...newMatch, fecha: event.target.value })} required /></div><div className="field"><label htmlFor={`${matchPrefix}-goles-local`}>Goles local</label><input id={`${matchPrefix}-goles-local`} type="number" min="0" step="1" value={newMatch.golesLocal} onChange={(event) => setNewMatch({ ...newMatch, golesLocal: event.target.value })} required /></div><div className="field"><label htmlFor={`${matchPrefix}-goles-visitante`}>Goles visitante</label><input id={`${matchPrefix}-goles-visitante`} type="number" min="0" step="1" value={newMatch.golesVisitante} onChange={(event) => setNewMatch({ ...newMatch, golesVisitante: event.target.value })} required /></div></div>
-                                <button className="button primary" type="submit" disabled={busy || detail.equipos.length < 2}><BadgeCheck size={17} /> Cargar resultado</button>
-                            </form>
-                        </section>
-                    </div>
-                    <h3 className="management-subheading">Estadísticas disponibles</h3>
-                    <RecordsScroll label="Estadísticas de equipos">
-                        {detail.equipos.length ? <table className="records-table management-table"><caption className="sr-only">Estadísticas manuales del torneo</caption><thead><tr><th scope="col">Equipo</th><th scope="col">PJ</th><th scope="col">G</th><th scope="col">E</th><th scope="col">P</th><th scope="col">GF</th><th scope="col">GC</th></tr></thead><tbody>{detail.equipos.map((team) => <tr key={team.id}><th scope="row">{team.nombre}</th><td>{team.partidosJugados}</td><td>{team.ganados}</td><td>{team.empatados}</td><td>{team.perdidos}</td><td>{team.golesFavor}</td><td>{team.golesContra}</td></tr>)}</tbody></table> : <p className="empty-inline">Todavía no hay equipos cargados.</p>}
-                    </RecordsScroll>
-                    <h3 className="management-subheading">Resultados</h3>
-                    <RecordsScroll label="Resultados del torneo">
-                        {detail.partidos.length ? <table className="records-table management-table"><caption className="sr-only">Resultados registrados</caption><thead><tr><th scope="col">Fecha</th><th scope="col">Partido</th><th scope="col">Resultado</th></tr></thead><tbody>{[...detail.partidos].reverse().map((match) => <tr key={match.id}><td>{formatDate(match.fecha)}</td><td>{teamName(match.equipoLocalId)} – {teamName(match.equipoVisitanteId)}</td><td>{match.golesLocal} – {match.golesVisitante}</td></tr>)}</tbody></table> : <p className="empty-inline">No hay resultados cargados.</p>}
-                    </RecordsScroll>
-                    <p className="form-hint light-hint management-note">Los equipos y resultados se cargan manualmente. No se genera fixture ni tabla de puntos.</p>
+                    {!detail.fixtureGenerado && detail.partidos.length === 0 && (
+                        <div className="management-columns">
+                            <section className="management-operation" aria-labelledby="new-team-title">
+                                <h3 id="new-team-title">Equipos participantes</h3>
+                                <form className="management-form" onSubmit={submitTeam}>
+                                    <div className="form-row">
+                                        <div className="field"><label htmlFor={`${teamPrefix}-nombre`}>Nombre del equipo</label><input id={`${teamPrefix}-nombre`} value={newTeam.nombre} onChange={(event) => setNewTeam({ ...newTeam, nombre: event.target.value })} required maxLength={100} /></div>
+                                        <div className="field"><label htmlFor={`${teamPrefix}-jugadores`}>Cantidad de jugadores</label><input id={`${teamPrefix}-jugadores`} type="number" min="1" step="1" value={newTeam.cantidadJugadores} onChange={(event) => setNewTeam({ ...newTeam, cantidadJugadores: event.target.value })} required /></div>
+                                    </div>
+                                    <button className="button primary" type="submit" disabled={busy}><Plus size={17} /> Agregar equipo</button>
+                                </form>
+                                {detail.equipos.length > 0 && <p className="empty-inline">{detail.equipos.map((team) => team.nombre).join(" · ")}</p>}
+                            </section>
+                            <section className="management-operation" aria-labelledby="generate-fixture-title">
+                                <h3 id="generate-fixture-title">Generar fixture</h3>
+                                <p className="empty-inline">{detail.formato === "copa" ? "El sorteo arma la llave y asigna descansos automáticamente." : "Cada equipo juega una vez contra los demás; se indica el descanso de cada jornada."}</p>
+                                <button className="button primary" type="button" disabled={busy || detail.equipos.length < 2} onClick={generateFixture}>
+                                    {busy ? <LoaderCircle className="spin" size={17} /> : <CalendarDays size={17} />}
+                                    {busy ? "Generando..." : "Generar fixture"}
+                                </button>
+                            </section>
+                        </div>
+                    )}
+                    {detail.partidos.length > 0 && (
+                        <>
+                            <h3 className="management-subheading">Fixture y resultados</h3>
+                            <TournamentFixture
+                                detail={detail}
+                                teamName={teamName}
+                                onSaveResult={submitMatchResult}
+                                busyMatchId={busyMatchId}
+                            />
+                        </>
+                    )}
+                    {detail.formato === "liga" && detail.equipos.length > 0 && (
+                        <>
+                            <h3 className="management-subheading">Tabla de posiciones · 3/1/0</h3>
+                            <RecordsScroll label="Tabla de posiciones de la liga">
+                                <table className="records-table management-table standings-management-table">
+                                    <caption className="sr-only">Tabla calculada con los resultados cargados</caption>
+                                    <thead><tr><th scope="col">Pos.</th><th scope="col">Equipo</th><th scope="col">PJ</th><th scope="col">PG</th><th scope="col">PE</th><th scope="col">PP</th><th scope="col">GF</th><th scope="col">GC</th><th scope="col">DG</th><th scope="col">Pts</th></tr></thead>
+                                    <tbody>{detail.tabla.map((team) => <tr key={team.id}><td>{team.posicion}</td><th scope="row">{team.nombre}</th><td>{team.partidosJugados}</td><td>{team.ganados}</td><td>{team.empatados}</td><td>{team.perdidos}</td><td>{team.golesFavor}</td><td>{team.golesContra}</td><td>{team.diferenciaGoles}</td><td><strong>{team.puntos}</strong></td></tr>)}</tbody>
+                                </table>
+                            </RecordsScroll>
+                        </>
+                    )}
+                    <p className="form-hint light-hint management-note">La tabla cambia solo al guardar un marcador. Empates de puntos: diferencia de gol, goles a favor y nombre del equipo.</p>
                 </>
             )}
             {!tournaments.length && <p className="empty-inline">Todavía no hay torneos operativos. Los ejemplos públicos son datos de referencia.</p>}

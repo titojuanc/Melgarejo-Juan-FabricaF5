@@ -1105,9 +1105,23 @@ main {
     align-items: center;
     gap: 8px;
     margin: 0;
+    .fixture-match-list {
+        grid-template-columns: 1fr;
+    }
 }
 .gym-hours {
     display: grid;
+    .fixture-result-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .fixture-result-form .button {
+        grid-column: 1 / -1;
+    }
+    .fixture-round-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
+    }
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
     list-style: none;
@@ -1349,6 +1363,11 @@ main {
     grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
     gap: 24px;
     margin-top: 22px;
+    min-width: 0;
+}
+.tournament-standing,
+.fixture-placeholder {
+    min-width: 0;
 }
 .tournament-standing {
     padding: 22px;
@@ -1382,6 +1401,19 @@ main {
 .standings-table tbody th {
     font-weight: 500;
 }
+.public-standings-scroll {
+    width: 100%;
+    min-width: 0;
+    margin: 8px 0;
+}
+.standings-detailed {
+    min-width: 760px;
+    font-size: 12px;
+}
+.standings-detailed th,
+.standings-detailed td {
+    white-space: nowrap;
+}
 .tournament-standing .text-link {
     margin-top: 12px;
     color: var(--yellow);
@@ -1408,6 +1440,53 @@ main {
 .empty-inline {
     color: var(--muted);
     font-size: 13px;
+}
+.public-fixture-list {
+    display: grid;
+    width: 100%;
+    gap: 10px;
+}
+.public-fixture-round {
+    width: 100%;
+    border-top: 1px solid #c9cec5;
+    padding-top: 9px;
+}
+.public-fixture-round h3,
+.modal-fixture-rounds h4 {
+    margin: 0 0 7px;
+    font-size: 14px;
+}
+.public-fixture-match {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 7px 0;
+    border-top: 1px solid #d7dbd4;
+    font-size: 12px;
+}
+.public-fixture-match time,
+.public-fixture-match small {
+    color: var(--muted);
+    white-space: nowrap;
+}
+.public-fixture-match span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.public-fixture-match strong {
+    color: var(--green-dark);
+    white-space: nowrap;
+}
+.fixture-bye {
+    margin: 4px 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+.modal-fixture-rounds {
+    display: grid;
+    gap: 8px;
 }
 .tournament-contact-note {
     margin-top: 18px;
@@ -1597,6 +1676,9 @@ main {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 0 14px;
 }
+.tournament-create-fields {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
 .management-fields .field input,
 .management-fields .field select,
 .management-form .field input,
@@ -1611,6 +1693,122 @@ main {
 .management-note {
     color: var(--muted);
     margin: 10px 0 0;
+}
+.tournament-fixture-rounds {
+    display: grid;
+    gap: 18px;
+}
+.fixture-round {
+    min-width: 0;
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+}
+.fixture-round-heading {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+.fixture-round-heading h4 {
+    margin: 0;
+    font-size: 15px;
+}
+.fixture-round-heading span {
+    color: var(--muted);
+    font-size: 12px;
+}
+.fixture-match-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+.fixture-match {
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    background: #fff;
+}
+.fixture-match-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 12px;
+}
+.fixture-match-teams {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin: 14px 0;
+    font-size: 14px;
+}
+.fixture-match-teams strong {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+.fixture-match-teams span {
+    color: var(--muted);
+    font-size: 12px;
+}
+.fixture-match-result {
+    margin: 0;
+    color: var(--green-dark);
+    font-family: "Barlow Condensed", sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    text-align: center;
+}
+.fixture-match-result small {
+    display: block;
+    color: var(--muted);
+    font-family: "Barlow", sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+}
+.fixture-result-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 8px;
+}
+.cup-result-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.cup-result-form .button {
+    grid-column: 1 / -1;
+}
+.fixture-result-form .field {
+    margin-bottom: 0;
+}
+.fixture-result-form .field label {
+    min-height: 2.5em;
+    font-size: 11px;
+}
+.fixture-result-form .field input {
+    min-height: 38px;
+}
+.fixture-result-form .button {
+    min-height: 38px;
+    padding: 8px 10px;
+    font-size: 12px;
+}
+.tournament-champion {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 14px 0 0;
+    padding: 12px;
+    background: #f5edce;
+}
+.tournament-champion svg {
+    color: #8e6b0a;
+}
+.standings-management-table {
+    min-width: 920px;
 }
 .management-columns {
     display: grid;
@@ -1917,7 +2115,8 @@ main {
     .gym-overview,
     .birthday-inquiry-layout,
     .tournament-feature {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
+        min-width: 0;
     }
     .about-intro,
     .location-section {
@@ -1946,6 +2145,9 @@ main {
     }
     .tournament-create-fields {
         grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .fixture-match-list {
+        grid-template-columns: 1fr;
     }
 }
 @media (max-width: 560px) {
@@ -2037,6 +2239,17 @@ main {
     }
     .management-table {
         min-width: 620px;
+    }
+    .fixture-result-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .fixture-result-form .button {
+        grid-column: 1 / -1;
+    }
+    .fixture-round-heading {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 5px;
     }
 }
 @media (prefers-reduced-motion: reduce) {

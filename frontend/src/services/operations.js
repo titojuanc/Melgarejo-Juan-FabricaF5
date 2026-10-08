@@ -48,7 +48,14 @@ export const getManagedTournaments = (signal) =>
 export const createTournament = (data) => post("/interno/torneos", data);
 export const getManagedTournament = (id, signal) =>
     request(`/interno/torneos/${encodeURIComponent(id)}`, { signal });
+export const generateFixture = (id) =>
+    post(`/interno/torneos/${encodeURIComponent(id)}/fixture`, {});
 export const createTeam = (id, data) =>
     post(`/interno/torneos/${encodeURIComponent(id)}/equipos`, data);
 export const recordMatch = (id, data) =>
     post(`/interno/torneos/${encodeURIComponent(id)}/partidos`, data);
+export const recordMatchResult = (tournamentId, matchId, data) =>
+    request(
+        `/interno/torneos/${encodeURIComponent(tournamentId)}/partidos/${encodeURIComponent(matchId)}`,
+        { method: "PUT", body: JSON.stringify(data) },
+    );

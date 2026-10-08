@@ -170,6 +170,8 @@ test("HTTP: operaciones internas requieren personal y persisten datos manuales",
             fechaInicio: "2099-04-01",
             fechaFin: "2099-04-30",
             estado: "En Juego",
+            formato: "liga",
+            intervaloDias: 7,
         },
     });
     assert.equal(tournament.response.status, 201);
@@ -220,10 +222,14 @@ test("HTTP: operaciones internas requieren personal y persisten datos manuales",
         [
             "equipoLocalId",
             "equipoVisitanteId",
+            "estado",
             "fecha",
             "golesLocal",
             "golesVisitante",
             "id",
+            "penalesLocal",
+            "penalesVisitante",
+            "ronda",
             "torneoId",
         ],
     );
@@ -231,7 +237,8 @@ test("HTTP: operaciones internas requieren personal y persisten datos manuales",
     const publicTournaments = await request("/torneos");
     assert.equal(publicTournaments.body.data[0].datosDeReferencia, true);
     assert.equal(
-        publicTournaments.body.data.some((item) => item.nombre === "Copa de prueba"),
+        publicTournaments.body.data.find((item) => item.nombre === "Copa de prueba")
+            .datosDeReferencia,
         false,
     );
 
@@ -240,4 +247,175 @@ test("HTTP: operaciones internas requieren personal y persisten datos manuales",
     assert.equal(restored.findAll("membresias").length, 2);
     assert.equal(restored.findAll("asistencias").length, 1);
     assert.equal(restored.findAll("partidos").length, 1);
+});
+
+test("HTTP: fixture de liga actualiza tabla y detalle publico despues de cada resultado", async (context) => {
+    const { auth, request } = await fixture(context);
+    const staffData = {
+        ...clientData,
+        email: "liga@example.test",
+        rol: "empleado",
+    };
+    await auth.createStaff(staffData);
+    const staff = await request("/auth/login", {
+        method: "POST",
+        data: staffData,
+    });
+    const tournament = await request("/interno/torneos", {
+        method: "POST",
+        cookie: staff.cookie,
+        data: {
+            nombre: "Liga pública",
+            fechaInicio: "2099-05-01",
+            fechaFin: "2099-06-30",
+            estado: "En Juego",
+            formato: "liga",
+            intervaloDias: 7,
+        },
+    });
+    const tournamentId = tournament.body.data.id;
+    const teams = [];
+    for (const name of ["Alfa", "Beta", "Gamma"]) {
+        const result = await request(`/interno/torneos/${tournamentId}/equipos`, {
+            method: "POST",
+            cookie: staff.cookie,
+            data: { nombre: name, cantidadJugadores: 10 },
+        });
+        teams.push(result.body.data);
+    }
+
+    const generated = await request(`/interno/torneos/${tournamentId}/fixture`, {
+        method: "POST",
+        cookie: staff.cookie,
+    });
+    assert.equal(generated.response.status, 201);
+    assert.equal(generated.body.data.partidos.length, 3);
+    assert.equal(generated.body.data.descansos.length, 3);
+    assert.equal(generated.body.data.tabla.every((team) => team.puntos === 0), true);
+
+    const matches = generated.body.data.partidos;
+    const scores = [
+        [1, 1],
+        [1, 2],
+        [2, 0],
+    ];
+    for (const [index, match] of matches.entries()) {
+        const [golesLocal, golesVisitante] = scores[index];
+        const result = await request(
+            `/interno/torneos/${tournamentId}/partidos/${match.id}`,
+            {
+                method: "PUT",
+                cookie: staff.cookie,
+                data: { golesLocal, golesVisitante },
+            },
+        );
+        assert.equal(result.response.status, 200);
+        assert.equal(result.body.data.torneo.partidos[index].estado, "Finalizado");
+    }
+
+    const publicList = await request("/torneos");
+    const publicTournament = publicList.body.data.find(
+        (item) => item.nombre === "Liga pública",
+    );
+    assert.equal(publicTournament.id, `operativo-${tournamentId}`);
+    assert.equal(publicTournament.tabla[0].equipo, "Gamma");
+    assert.equal(publicTournament.tabla[0].puntos, 4);
+    assert.equal(publicTournament.tabla[0].partidosJugados, 2);
+    assert.equal(publicTournament.tabla[0].diferenciaGoles, 1);
+    assert.equal(publicTournament.partidos.length, 3);
+    assert.ok(publicTournament.partidos.every((match) => match.resultado));
+
+    const detail = await request(`/torneos/${publicTournament.id}`);
+    assert.equal(detail.response.status, 200);
+    assert.equal(detail.body.data.tabla[0].equipo, "Gamma");
+    assert.equal(detail.body.data.descansos.length, 3);
+    assert.equal(JSON.stringify(detail.body.data).toLowerCase().includes("telefono"), false);
+    assert.equal(JSON.stringify(detail.body.data).toLowerCase().includes("email"), false);
+    assert.equal(teams.length, 3);
+});
+
+test("HTTP: copa avanza ganadores y publica el campeon al completar la llave", async (context) => {
+    const { auth, request } = await fixture(context);
+    const staffData = {
+        ...clientData,
+        email: "copa@example.test",
+        rol: "empleado",
+    };
+    await auth.createStaff(staffData);
+    const staff = await request("/auth/login", {
+        method: "POST",
+        data: staffData,
+    });
+    const tournament = await request("/interno/torneos", {
+        method: "POST",
+        cookie: staff.cookie,
+        data: {
+            nombre: "Copa directa",
+            fechaInicio: "2099-07-01",
+            fechaFin: "2099-07-20",
+            estado: "En Juego",
+            formato: "copa",
+            intervaloDias: 2,
+        },
+    });
+    const tournamentId = tournament.body.data.id;
+    for (const name of ["Uno", "Dos", "Tres"]) {
+        await request(`/interno/torneos/${tournamentId}/equipos`, {
+            method: "POST",
+            cookie: staff.cookie,
+            data: { nombre: name, cantidadJugadores: 10 },
+        });
+    }
+
+    const generated = await request(`/interno/torneos/${tournamentId}/fixture`, {
+        method: "POST",
+        cookie: staff.cookie,
+    });
+    assert.equal(generated.body.data.partidos.length, 1);
+    assert.equal(generated.body.data.descansos.length, 1);
+    const firstMatch = generated.body.data.partidos[0];
+    const tiedWithoutPenalties = await request(
+        `/interno/torneos/${tournamentId}/partidos/${firstMatch.id}`,
+        {
+            method: "PUT",
+            cookie: staff.cookie,
+            data: { golesLocal: 1, golesVisitante: 1 },
+        },
+    );
+    assert.equal(tiedWithoutPenalties.response.status, 400);
+    const firstResult = await request(
+        `/interno/torneos/${tournamentId}/partidos/${firstMatch.id}`,
+        {
+            method: "PUT",
+            cookie: staff.cookie,
+            data: {
+                golesLocal: 1,
+                golesVisitante: 1,
+                penalesLocal: 4,
+                penalesVisitante: 3,
+            },
+        },
+    );
+    assert.equal(firstResult.body.data.torneo.partidos.length, 2);
+    assert.equal(firstResult.body.data.torneo.partidos[1].ronda, 2);
+
+    const finalMatch = firstResult.body.data.torneo.partidos[1];
+    const finalResult = await request(
+        `/interno/torneos/${tournamentId}/partidos/${finalMatch.id}`,
+        {
+            method: "PUT",
+            cookie: staff.cookie,
+            data: { golesLocal: 2, golesVisitante: 1 },
+        },
+    );
+    assert.equal(finalResult.body.data.torneo.estado, "Finalizado");
+    assert.ok(finalResult.body.data.torneo.campeon);
+
+    const publicTournament = await request(
+        `/torneos/operativo-${tournamentId}`,
+    );
+    assert.equal(publicTournament.body.data.formato, "copa");
+    assert.equal(publicTournament.body.data.campeon.equipo, finalResult.body.data.torneo.campeon.nombre);
+    assert.equal(publicTournament.body.data.partidos.length, 2);
+    assert.match(publicTournament.body.data.partidos[0].resultado, /pen\./);
 });

@@ -75,11 +75,30 @@ export function createOperationsRoutes(service = operationsService, auth = authS
         ),
     );
     router.post(
+        "/torneos/:id/fixture",
+        ...staffMutation,
+        endpoint(
+            (req) => service.generateFixture(Number(req.params.id)),
+            201,
+        ),
+    );
+    router.post(
         "/torneos/:id/partidos",
         ...staffMutation,
         endpoint(
             (req) => service.addMatch(Number(req.params.id), req.body),
             201,
+        ),
+    );
+    router.put(
+        "/torneos/:id/partidos/:partidoId",
+        ...staffMutation,
+        endpoint((req) =>
+            service.recordMatchResult(
+                Number(req.params.id),
+                Number(req.params.partidoId),
+                req.body,
+            ),
         ),
     );
 

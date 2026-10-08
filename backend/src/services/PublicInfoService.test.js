@@ -4,7 +4,11 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { AuthRepository } from "../repositories/AuthRepository.js";
+import { OperationsRepository } from "../repositories/OperationsRepository.js";
+import { TurnoRepository } from "../repositories/TurnoRepository.js";
 import { AuthService } from "./AuthService.js";
+import { OperationsService } from "./OperationsService.js";
+import { TurnoService } from "./TurnoService.js";
 import { createApp } from "../app.js";
 import { PublicInfoService } from "./PublicInfoService.js";
 
@@ -12,7 +16,13 @@ async function httpFixture(context) {
     const directory = mkdtempSync(join(tmpdir(), "fabrica-public-info-"));
     context.after(() => rmSync(directory, { recursive: true, force: true }));
     const auth = new AuthService(new AuthRepository(join(directory, "auth.json")));
-    const server = createApp({ auth }).listen(0, "127.0.0.1");
+    const turnos = new TurnoService(new TurnoRepository(), auth);
+    const operations = new OperationsService(
+        new OperationsRepository(join(directory, "operations.json")),
+        auth,
+        turnos,
+    );
+    const server = createApp({ auth, turnos, operations }).listen(0, "127.0.0.1");
     await new Promise((resolve) => server.once("listening", resolve));
     context.after(
         () =>

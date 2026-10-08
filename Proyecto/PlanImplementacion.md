@@ -201,17 +201,17 @@ Archivos para revisar la entrega: [App](../frontend/src/App.jsx), [GestionPage](
 
 Alcance confirmado por el usuario: turnos, pagos manuales, membresias/asistencia de Gym y gestion de torneos. Empleado opera esos modulos; admin tiene esos permisos y ademas administra usuarios. El endpoint `POST /auth/users` ya esta disponible solo para admin.
 
-No hay cobro online ni envio real de WhatsApp. Los pagos internos registran un importe ingresado por el empleado y no calculan precios, senas ni recargos. Las membresias registran fechas explicitas; la asistencia no se bloquea por vencimiento. Turnos se confirman/cancelan por acciones internas y pueden reprogramarse solo si no estan cancelados. Torneos aceptan equipos y resultados manuales; estadisticas limitadas a partidos y goles, sin fixture automatico, puntos o desempates. No incluir DNI ni datos personales en vistas/endpoints publicos.
+No hay cobro online ni envio real de WhatsApp. Los pagos internos registran un importe ingresado por el empleado y no calculan precios, senas ni recargos. Las membresias registran fechas explicitas; la asistencia no se bloquea por vencimiento. Turnos se confirman/cancelan por acciones internas y pueden reprogramarse solo si no estan cancelados. Formato confirmado: liga a una rueda o copa eliminatoria; liga 3/1/0, desempate por diferencia de gol, goles a favor y nombre; intervalo configurable por torneo; sorteo de copa con pases automaticos y penales obligatorios si hay empate. No incluir DNI ni datos personales en vistas/endpoints publicos.
 
 ### Backend interno implementado
 
-Los cambios de estado de turnos son exclusivos de empleado/admin: pendiente puede confirmarse o cancelarse, confirmado puede cancelarse y cancelado es terminal. Las operaciones de pagos, membresias, asistencias, torneos, equipos y partidos se guardan en `backend/data/operations.json`, excluido de Git. Las consultas publicas de torneos siguen entregando solo datos de referencia; no se mezclan registros internos.
+Los cambios de estado de turnos son exclusivos de empleado/admin: pendiente puede confirmarse o cancelarse, confirmado puede cancelarse y cancelado es terminal. Las operaciones de pagos, membresias, asistencias, torneos, equipos y partidos se guardan en `backend/data/operations.json`, excluido de Git. `POST /interno/torneos/:id/fixture` genera cruces y `PUT /interno/torneos/:id/partidos/:partidoId` actualiza resultados y tabla; copa avanza ronda/campeon y exige penales cuando empatan. Las rutas publicas combinan los ejemplos Figma marcados como referencia con registros operativos sanitizados.
 
-Verificado con la suite backend: 20 pruebas; incluye permisos, transiciones, persistencia, validacion de pagos/membresias y carga manual de resultados. La generacion automatica de cruces sigue pendiente de definir formato, desempates y manejo de cantidades impares.
+Verificado con pruebas backend de permisos, transiciones, persistencia, puntuacion, fixture par/impar, avances de copa y detalle publico. La tabla `GET /turnos` refleja el estado persistido tras confirmar/cancelar; cancelar libera el horario.
 
 ### Frontend interno implementado
 
-`/gestion` ofrece secciones para pagos, membresias/asistencia y torneos; admin ve ademas el alta de usuarios internos. Turnos tiene acciones de confirmar, reprogramar y cancelar con confirmacion antes de cancelar. La lista de clientes privada entrega solo id/nombre.
+`/gestion` ofrece secciones para pagos, membresias/asistencia y torneos; admin ve ademas el alta de usuarios internos. Torneos permite elegir liga/copa e intervalo, cargar equipos, generar fixture, guardar marcadores y ver tabla/ronda actualizada. Turnos tiene acciones de confirmar, reprogramar y cancelar con confirmacion antes de cancelar. La tabla de Reservas y disponibilidad se actualizan tras esas transiciones.
 
 Verificado con 13 pruebas frontend, build de produccion y navegador autenticado: admin crea empleado, empleado opera Gym/pagos/torneos y cliente no accede al panel. Se probaron turnos y ausencia de desbordamiento horizontal a 1440 px y 390 px.
 
@@ -257,7 +257,7 @@ El backend no carga `.env` automaticamente. Configurar variables antes de inicia
 ## 7. Riesgos y pendientes que no deben ocultarse
 
 - Login/Register, turnos por rol, frontend publico y panel interno estan integrados. La prioridad inmediata es la verificacion final contra consignas y referencias.
-- Siguen pendientes el horario completo de Gym y la generacion automatica de fixture; el backend permite cargar manualmente resultados operativos y registra membresias/asistencias.
+- Sigue pendiente el horario completo de Gym. Los fixtures operativos, tablas de liga y llaves de copa ya se generan y actualizan con las reglas acordadas.
 - Cumpleanos y reservas comparten cancha; no validar su disponibilidad como recursos independientes al confirmar ocupaciones.
 - Persistencia de cuentas en archivo y sesiones en memoria son para una sola instancia local, no para produccion.
 - No se implementaron recuperacion de contrasena ni verificacion de email; no prometidas para este paso.
