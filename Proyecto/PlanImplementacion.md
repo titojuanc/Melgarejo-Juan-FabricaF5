@@ -184,7 +184,7 @@ Verificado con 11 pruebas frontend, build de produccion y navegador a 1440 px y 
 
 #### Punto de reanudacion
 
-Estado al 8 de octubre de 2026: backend interno publicado en `origin/main`, commit `cde3d32` (`Implementa operaciones internas por rol`). Frontend interno implementado y validado localmente; publicar su commit separado antes de iniciar la verificacion final.
+Estado al 8 de octubre de 2026: backend interno publicado en `origin/main`, commit `cde3d32` (`Implementa operaciones internas por rol`); frontend interno publicado en `origin/main`, commit `dc180ba` (`Implementa panel interno por roles`).
 
 La API incluye autenticacion (`/auth/*`), turnos por rol (`/turnos/*`), operaciones internas (`/interno/*`) y lectura publica/consulta simulada (`/gym`, `/cumpleanos/*`, `/torneos/*`). El frontend consume esos contratos. Empleado y admin operan turnos, pagos, membresias, asistencias y torneos; solo admin crea usuarios internos. `GET /interno/clientes` es una consulta privada de solo lectura con id/nombre para asociar registros.
 
@@ -195,7 +195,7 @@ Archivos para revisar la entrega: [App](../frontend/src/App.jsx), [GestionPage](
 1. Revisar consignas, requisitos de accesibilidad/contraste y fidelidad visual contra las referencias disponibles.
 2. Ejecutar backend/frontend tests y build; volver a revisar errores y diff.
 3. Completar los estados de carga/error/vacio no cubiertos y una revision final responsive de todas las rutas.
-4. Publicar la etapa frontend con su commit/push propio y verificar el estado de `origin/main`.
+4. Actualizar este plan con resultados y brechas restantes; publicar cualquier correccion de la verificacion en un commit separado.
 
 #### Limites y decisiones pendientes
 
