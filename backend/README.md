@@ -70,7 +70,7 @@ Los pagos guardan el importe ingresado por el personal y deben asociarse a un tu
 
 Cada torneo define formato (`liga` o `copa`), fechas e intervalo de dias entre partidos. La liga genera una rueda todos-contra-todos, con descansos cuando la cantidad de equipos es impar. La tabla cuenta partidos finalizados con 3/1/0 puntos y desempata por diferencia de gol, goles a favor y nombre. La copa sortea los equipos, asigna pases automaticos para completar la llave y crea cada ronda siguiente cuando se cargan todos los resultados de la ronda actual; un empate requiere ganador por penales y al terminar se publica el campeon. La fecha final debe alcanzar para todos los partidos. Los torneos operativos aparecen en las rutas publicas; los datos de referencia Figma siguen identificados y separados. Ninguna ruta publica expone telefono, email o DNI.
 
-Estos datos se guardan en `backend/data/operations.json`, excluido de Git. No se mezclan con los torneos ilustrativos de las rutas publicas ni se exponen datos personales en ellas.
+Los datos operativos se guardan en `backend/data/operations.json`, excluido de Git. Si ese archivo no existe, el repositorio arranca desde la semilla versionada [operations.seed.json](src/fixtures/operations.seed.json); el primer cambio operativo crea el archivo local. Si el archivo ya existe, se conserva y no se mezcla con la semilla. La variable `OPERATIONS_DATA_FILE` personalizada inicia vacia. Los torneos ilustrativos de las rutas publicas permanecen separados y no se exponen datos personales.
 La consulta interna de clientes devuelve solo `id` y `nombre`; no permite editar perfiles ni devuelve telefono o email.
 
 Registro:

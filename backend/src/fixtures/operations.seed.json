@@ -1,0 +1,131 @@
+{
+    "pagos": [],
+    "membresias": [],
+    "asistencias": [],
+    "torneos": [
+        {
+            "id": 1,
+            "nombre": "Torneo demostracion",
+            "fechaInicio": "2026-10-15",
+            "fechaFin": "2026-12-31",
+            "estado": "En Juego",
+            "formato": "liga",
+            "intervaloDias": 7,
+            "fixtureGenerado": true,
+            "descansos": [],
+            "campeonId": null
+        }
+    ],
+    "equipos": [
+        {
+            "id": 1,
+            "nombre": "Los Pibes",
+            "cantidadJugadores": 10,
+            "torneoId": 1
+        },
+        {
+            "id": 2,
+            "nombre": "La Banda",
+            "cantidadJugadores": 10,
+            "torneoId": 1
+        },
+        {
+            "id": 3,
+            "nombre": "F5 Norte",
+            "cantidadJugadores": 10,
+            "torneoId": 1
+        },
+        {
+            "id": 4,
+            "nombre": "F5 Sur",
+            "cantidadJugadores": 10,
+            "torneoId": 1
+        }
+    ],
+    "partidos": [
+        {
+            "id": 1,
+            "torneoId": 1,
+            "equipoLocalId": 1,
+            "equipoVisitanteId": 4,
+            "fecha": "2026-10-15",
+            "golesLocal": 2,
+            "golesVisitante": 1,
+            "ronda": 1,
+            "estado": "Finalizado",
+            "penalesLocal": null,
+            "penalesVisitante": null
+        },
+        {
+            "id": 2,
+            "torneoId": 1,
+            "equipoLocalId": 2,
+            "equipoVisitanteId": 3,
+            "fecha": "2026-10-22",
+            "golesLocal": null,
+            "golesVisitante": null,
+            "ronda": 1,
+            "estado": "Pendiente",
+            "penalesLocal": null,
+            "penalesVisitante": null
+        },
+        {
+            "id": 3,
+            "torneoId": 1,
+            "equipoLocalId": 1,
+            "equipoVisitanteId": 3,
+            "fecha": "2026-10-29",
+            "golesLocal": null,
+            "golesVisitante": null,
+            "ronda": 2,
+            "estado": "Pendiente",
+            "penalesLocal": null,
+            "penalesVisitante": null
+        },
+        {
+            "id": 4,
+            "torneoId": 1,
+            "equipoLocalId": 4,
+            "equipoVisitanteId": 2,
+            "fecha": "2026-11-05",
+            "golesLocal": null,
+            "golesVisitante": null,
+            "ronda": 2,
+            "estado": "Pendiente",
+            "penalesLocal": null,
+            "penalesVisitante": null
+        },
+        {
+            "id": 5,
+            "torneoId": 1,
+            "equipoLocalId": 1,
+            "equipoVisitanteId": 2,
+            "fecha": "2026-11-12",
+            "golesLocal": null,
+            "golesVisitante": null,
+            "ronda": 3,
+            "estado": "Pendiente",
+            "penalesLocal": null,
+            "penalesVisitante": null
+        },
+        {
+            "id": 6,
+            "torneoId": 1,
+            "equipoLocalId": 3,
+            "equipoVisitanteId": 4,
+            "fecha": "2026-11-19",
+            "golesLocal": null,
+            "golesVisitante": null,
+            "ronda": 3,
+            "estado": "Pendiente",
+            "penalesLocal": null,
+            "penalesVisitante": null
+        }
+    ],
+    "nextPagoId": 1,
+    "nextMembresiaId": 1,
+    "nextAsistenciaId": 1,
+    "nextTorneoId": 2,
+    "nextEquipoId": 5,
+    "nextPartidoId": 7
+}

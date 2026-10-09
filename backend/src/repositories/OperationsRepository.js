@@ -7,6 +7,13 @@ import Torneo from "../models/Torneo.js";
 import Equipo from "../models/Equipo.js";
 import Partido from "../models/Partido.js";
 
+const defaultDataPath = fileURLToPath(
+    new URL("../../data/operations.json", import.meta.url),
+);
+const defaultSeedPath = fileURLToPath(
+    new URL("../fixtures/operations.seed.json", import.meta.url),
+);
+
 const initialState = () => ({
     pagos: [],
     membresias: [],
@@ -39,21 +46,34 @@ function isValidState(state) {
     );
 }
 
+function readState(filePath) {
+    const state = JSON.parse(readFileSync(filePath, "utf8"));
+    if (!isValidState(state)) {
+        throw new Error("El archivo de operaciones no tiene un formato valido.");
+    }
+    return state;
+}
+
+export function loadOperationsState(filePath, seedPath = null) {
+    try {
+        return readState(filePath);
+    } catch (error) {
+        if (error.code !== "ENOENT") throw error;
+        return seedPath ? readState(seedPath) : initialState();
+    }
+}
+
 export class OperationsRepository {
     constructor(
         filePath = process.env.OPERATIONS_DATA_FILE ||
-            fileURLToPath(new URL("../../data/operations.json", import.meta.url)),
+            defaultDataPath,
     ) {
         this.filePath = filePath;
-        try {
-            this.state = JSON.parse(readFileSync(this.filePath, "utf8"));
-            if (!isValidState(this.state)) {
-                throw new Error("El archivo de operaciones no tiene un formato valido.");
-            }
-        } catch (error) {
-            if (error.code !== "ENOENT") throw error;
-            this.state = initialState();
-        }
+        const seedPath =
+            filePath === defaultDataPath && !process.env.OPERATIONS_DATA_FILE
+                ? defaultSeedPath
+                : null;
+        this.state = loadOperationsState(this.filePath, seedPath);
     }
 
     findAll(collection) {
