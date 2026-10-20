@@ -2260,3 +2260,9 @@ main {
         scroll-behavior: auto !important;
     }
 }
+
+/* Se ocultan los títulos chicos sobre los títulos principales */
+.eyebrow,
+[class] .eyebrow {
+    display: none !important;
+}
