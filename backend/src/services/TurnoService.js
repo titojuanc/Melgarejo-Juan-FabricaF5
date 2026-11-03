@@ -78,12 +78,14 @@ export class TurnoService {
     confirm(id) {
         const turno = this.getById(id);
         turno.confirmar();
+        this.repository.save();
         return turno;
     }
 
     cancel(id) {
         const turno = this.getById(id);
         turno.cancelar();
+        this.repository.save();
         return turno;
     }
 
