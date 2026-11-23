@@ -1,8 +1,8 @@
-# Plan de implementacion y continuidad - Entrega 3
+# Cierre del plan de implementacion - Entrega 3 (COMPLETADO)
 
-Actualizado: 8 de octubre de 2026. Fecha de entrega indicada por el usuario: 9 de noviembre de 2026, 23:59.
+Actualizado: 22 de noviembre de 2026. Estado: cerrado como referencia historica.
 
-Este documento permite retomar el proyecto sin acceder a la conversacion original. Distingue decisiones confirmadas, codigo implementado y trabajo pendiente. Las decisiones posteriores del usuario prevalecen sobre los supuestos iniciales de los otros documentos.
+La Entrega 3 queda cerrada. Este documento conserva las decisiones y el contexto de esa etapa, pero ya no es el plan activo de trabajo. Las brechas que siguen vigentes se trasladan al [Plan de implementacion de la Entrega 5](PlanEntrega5.md); no se deben retomar como tareas pendientes de la Entrega 3.
 
 ## 1. Objetivo y forma de trabajo
 
@@ -160,7 +160,7 @@ La grilla consume disponibilidad publica. Los clientes ven solo sus reservas y n
 | Completar frontend publico conectado    | Completada | Home, Gym, Cumpleanos, Torneos y Nosotros con servicios existentes.           |
 | Implementar backend interno por rol      | Completada | Turnos, pagos, membresias, asistencias y torneos manuales con persistencia.     |
 | Implementar frontend interno por rol    | Completada | Panel de empleado/admin, altas admin y acciones de turnos conectadas.          |
-| Verificar y documentar entrega completa | Siguiente  | Pruebas, accesibilidad, responsive y contraste con las consignas.              |
+| Verificar y documentar entrega completa | Completada | Cierre de la etapa; las brechas funcionales restantes se trasladan a la Entrega 5. |
 
 ### Login/Register implementado
 
@@ -180,28 +180,11 @@ Home, Gym, Cumpleanos, Torneos y Sobre Nosotros consumen los endpoints disponibl
 
 Verificado con 11 pruebas frontend, build de produccion y navegador a 1440 px y 390 px sin desbordamiento horizontal en las cinco paginas.
 
-### Siguiente tarea concreta: verificacion final de entrega
+### Cierre y traspaso
 
-#### Punto de reanudacion
+La autenticacion, la interfaz publica, los turnos por rol y el panel interno forman la base entregada en esta etapa. El sistema aun tenia limites funcionales identificados en el contexto de Entrega 3, entre ellos las consultas simuladas de cumpleanos y la ausencia de cancelacion de turnos por clientes. Esos limites no se reabren como trabajo de Entrega 3: su resolucion y la verificacion integral corresponden a la Entrega 5.
 
-Estado al 8 de octubre de 2026: backend interno publicado en `origin/main`, commit `cde3d32` (`Implementa operaciones internas por rol`); frontend interno publicado en `origin/main`, commit `dc180ba` (`Implementa panel interno por roles`).
-
-La API incluye autenticacion (`/auth/*`), turnos por rol (`/turnos/*`), operaciones internas (`/interno/*`) y lectura publica/consulta simulada (`/gym`, `/cumpleanos/*`, `/torneos/*`). El frontend consume esos contratos. Empleado y admin operan turnos, pagos, membresias, asistencias y torneos; solo admin crea usuarios internos. `GET /interno/clientes` es una consulta privada de solo lectura con id/nombre para asociar registros.
-
-Archivos para revisar la entrega: [App](../frontend/src/App.jsx), [GestionPage](../frontend/src/pages/GestionPage.jsx), [TurnosPage](../frontend/src/pages/TurnosPage.jsx), [backend README](../backend/README.md), [Entrega3](Entrega3.md) y las consignas originales disponibles en el repositorio.
-
-#### Orden de trabajo
-
-1. Revisar consignas, requisitos de accesibilidad/contraste y fidelidad visual contra las referencias disponibles.
-2. Ejecutar backend/frontend tests y build; volver a revisar errores y diff.
-3. Completar los estados de carga/error/vacio no cubiertos y una revision final responsive de todas las rutas.
-4. Actualizar este plan con resultados y brechas restantes; publicar cualquier correccion de la verificacion en un commit separado.
-
-#### Limites y decisiones pendientes
-
-Alcance confirmado por el usuario: turnos, pagos manuales, membresias/asistencia de Gym y gestion de torneos. Empleado opera esos modulos; admin tiene esos permisos y ademas administra usuarios. El endpoint `POST /auth/users` ya esta disponible solo para admin.
-
-No hay cobro online ni envio real de WhatsApp. Los pagos internos registran un importe ingresado por el empleado y no calculan precios, senas ni recargos. Las membresias registran fechas explicitas; la asistencia no se bloquea por vencimiento. Turnos se confirman/cancelan por acciones internas y pueden reprogramarse solo si no estan cancelados. Formato confirmado: liga a una rueda o copa eliminatoria; liga 3/1/0, desempate por diferencia de gol, goles a favor y nombre; intervalo configurable por torneo; sorteo de copa con pases automaticos y penales obligatorios si hay empate. No incluir DNI ni datos personales en vistas/endpoints publicos.
+Para continuar, usar [PlanEntrega5.md](PlanEntrega5.md), que distingue trabajo completado, dependencias, criterios de aceptacion y el guion preliminar de defensa.
 
 ### Backend interno implementado
 
