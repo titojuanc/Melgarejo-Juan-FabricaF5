@@ -1,9 +1,20 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+    createContext,
+    useContext,
+    useEffect,
+    useRef,
+    useState,
+} from "react";
 import * as service from "../services/turnos.js";
 import { useNotifications } from "./Notifications.jsx";
 import { useAuth } from "./AuthProvider.jsx";
+import { dateKey, weekDates } from "../utils/turnos.js";
 
 const TurnosContext = createContext(null);
+
+function currentWeek() {
+    return weekDates(dateKey(new Date())).map(dateKey);
+}
 
 export function TurnosProvider({ children }) {
     const [turnos, setTurnos] = useState([]);
@@ -12,17 +23,29 @@ export function TurnosProvider({ children }) {
     const [availabilityError, setAvailabilityError] = useState("");
     const [listLoading, setListLoading] = useState(true);
     const [listError, setListError] = useState("");
+    const availabilityDates = useRef(currentWeek());
     const { user, loading: authLoading } = useAuth();
     const { notify } = useNotifications();
 
-    async function reloadAvailability(signal) {
+    async function reloadAvailability(
+        dates = availabilityDates.current,
+        signal,
+    ) {
+        availabilityDates.current = [...dates];
+        const futureDates = dates.filter(
+            (fecha) => fecha >= dateKey(new Date()),
+        );
         setAvailabilityLoading(true);
         setAvailabilityError("");
         try {
-            const data = await service.getAvailability(signal);
-            if (!Array.isArray(data))
+            const results = await Promise.all(
+                futureDates.map((fecha) =>
+                    service.getAvailability(fecha, signal),
+                ),
+            );
+            if (results.some((data) => !Array.isArray(data)))
                 throw new Error("La disponibilidad no es valida.");
-            setAvailability(data);
+            setAvailability(results.flat());
         } catch (failure) {
             if (failure.name === "AbortError") return;
             setAvailabilityError(failure.message);
@@ -61,7 +84,7 @@ export function TurnosProvider({ children }) {
 
     useEffect(() => {
         const controller = new AbortController();
-        reloadAvailability(controller.signal);
+        reloadAvailability(availabilityDates.current, controller.signal);
         if (!authLoading) reload(controller.signal);
         return () => controller.abort();
     }, [user?.id, user?.rol, authLoading]);

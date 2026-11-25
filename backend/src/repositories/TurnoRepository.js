@@ -16,7 +16,8 @@ function toTurno(record) {
         record.cantidadJugadores,
         record.incluyeLuces,
         record.estado,
-        record.clienteId
+        record.clienteId,
+        record.cancelacionTardia ?? false,
     );
 }
 

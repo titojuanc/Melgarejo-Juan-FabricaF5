@@ -18,7 +18,10 @@ export class TurnoController {
 
     getAvailability(req, res, next) {
         try {
-            return successResponse(res, this.service.getAvailability());
+            return successResponse(
+                res,
+                this.service.getAvailability(req.query.fecha),
+            );
         } catch (error) {
             next(error);
         }
@@ -73,7 +76,11 @@ export class TurnoController {
     cancel(req, res, next) {
         try {
             const id = Number(req.params.id);
-            return successResponse(res, this.service.cancel(id));
+            const turno =
+                req.user.rol === "cliente"
+                    ? this.service.cancelOwn(id, req.user)
+                    : this.service.cancel(id);
+            return successResponse(res, turno);
         } catch (error) {
             next(error);
         }

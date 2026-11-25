@@ -31,7 +31,9 @@ async function request(path, options = {}) {
 export const getGymInfo = (signal) => request("/gym", { signal });
 export const getBirthdayPackages = (signal) =>
     request("/cumpleanos/paquetes", { signal });
-export const createBirthdayInquiry = (data) =>
+export const getMyBirthdayRequests = (signal) =>
+    request("/cumpleanos/mis", { signal });
+export const createBirthdayRequest = (data) =>
     request("/cumpleanos/consultas", {
         method: "POST",
         body: JSON.stringify(data),

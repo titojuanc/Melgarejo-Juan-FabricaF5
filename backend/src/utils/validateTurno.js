@@ -24,6 +24,21 @@ export const validateTurnoData = (data) => {
     ) {
         throw new BadRequestError("El horario del turno no es valido.");
     }
+    const [startHour, startMinute] = horaInicio.split(":").map(Number);
+    const [endHour, endMinute] = horaFin.split(":").map(Number);
+    const startMinutes = startHour * 60 + startMinute;
+    const endMinutes = endHour * 60 + endMinute;
+    if (
+        startMinutes < 12 * 60 ||
+        startMinutes > 21 * 60 ||
+        startMinute !== 0 ||
+        endMinutes - startMinutes !== 60 ||
+        endMinutes > 22 * 60
+    ) {
+        throw new BadRequestError(
+            "Los turnos deben durar una hora y estar entre las 12:00 y las 22:00.",
+        );
+    }
     if (new Date(`${fecha}T${horaInicio}:00`) <= new Date()) {
         throw new BadRequestError("El turno debe comenzar en una fecha y hora futuras.");
     }

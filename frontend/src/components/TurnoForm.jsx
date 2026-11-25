@@ -22,7 +22,7 @@ export default function TurnoForm({
     });
     const [errors, setErrors] = useState({});
     const [busy, setBusy] = useState(false);
-    const { availability, save } = useTurnos();
+    const { availability, turnos, save } = useTurnos();
     const { user } = useAuth();
     const isClient = user?.rol === "cliente";
     const { notify } = useNotifications();
@@ -38,9 +38,15 @@ export default function TurnoForm({
 
     async function submit(event) {
         event.preventDefault();
-        const nextErrors = validateReserva(data, availability, initial.id, {
-            requireClientId: !isClient,
-        });
+        const nextErrors = validateReserva(
+            data,
+            reservation ? availability : turnos,
+            initial.id,
+            {
+                requireClientId: !isClient,
+                availableSlotsOnly: reservation,
+            },
+        );
         setErrors(nextErrors);
         if (Object.keys(nextErrors).length) {
             notify("Revisa los campos de la reserva.", "error");

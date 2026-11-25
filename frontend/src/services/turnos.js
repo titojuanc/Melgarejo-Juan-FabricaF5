@@ -30,8 +30,8 @@ async function request(path = "", options = {}) {
     return result.data;
 }
 
-export const getAvailability = (signal) =>
-    request("/disponibilidad", { signal });
+export const getAvailability = (fecha, signal) =>
+    request(`/disponibilidad?fecha=${encodeURIComponent(fecha)}`, { signal });
 export const getMine = (signal) => request("/mis", { signal });
 export const getTurnos = (signal) => request("", { signal });
 export const createTurno = (data) =>

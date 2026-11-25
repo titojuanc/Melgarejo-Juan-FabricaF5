@@ -5,7 +5,7 @@ import { useTurnos } from "../components/TurnosProvider.jsx";
 import LoadState from "../components/LoadState.jsx";
 import WeekCalendar from "../components/WeekCalendar.jsx";
 import TurnoForm from "../components/TurnoForm.jsx";
-import { dateKey } from "../utils/turnos.js";
+import { dateKey, weekDates } from "../utils/turnos.js";
 import { useAuth } from "../components/AuthProvider.jsx";
 
 export default function ReservaPage() {
@@ -19,6 +19,12 @@ export default function ReservaPage() {
     const [anchor, setAnchor] = useState(dateKey(new Date()));
     const [selected, setSelected] = useState(null);
     const [formVersion, setFormVersion] = useState(0);
+    function changeWeek(nextAnchor) {
+        setAnchor(nextAnchor);
+        setSelected(null);
+        setFormVersion((current) => current + 1);
+        reload(weekDates(nextAnchor).map(dateKey));
+    }
     return (
         <div className="page-container reservation-page">
             <div className="page-heading">
@@ -46,8 +52,8 @@ export default function ReservaPage() {
                         <>
                             <WeekCalendar
                                 anchor={anchor}
-                                onWeekChange={setAnchor}
-                                turnos={availability}
+                                onWeekChange={changeWeek}
+                                slots={availability}
                                 selected={selected}
                                 onSelect={(slot) => {
                                     setSelected(slot);

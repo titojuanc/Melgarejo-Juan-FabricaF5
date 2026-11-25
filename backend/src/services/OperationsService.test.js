@@ -6,9 +6,11 @@ import { join } from "node:path";
 import { AuthRepository } from "../repositories/AuthRepository.js";
 import { OperationsRepository } from "../repositories/OperationsRepository.js";
 import { TurnoRepository } from "../repositories/TurnoRepository.js";
+import { CumpleanosRepository } from "../repositories/CumpleanosRepository.js";
 import { AuthService } from "./AuthService.js";
 import { OperationsService } from "./OperationsService.js";
 import { TurnoService } from "./TurnoService.js";
+import { CumpleanosService } from "./CumpleanosService.js";
 import { createApp } from "../app.js";
 
 const clientData = {
@@ -23,10 +25,21 @@ async function fixture(context) {
     const directory = mkdtempSync(join(tmpdir(), "fabrica-operaciones-"));
     context.after(() => rmSync(directory, { recursive: true, force: true }));
     const auth = new AuthService(new AuthRepository(join(directory, "auth.json")));
-    const turnos = new TurnoService(new TurnoRepository(), auth);
+    const birthdays = new CumpleanosRepository();
+    const turnos = new TurnoService(new TurnoRepository(), auth, birthdays);
     const repository = new OperationsRepository(join(directory, "operations.json"));
     const operations = new OperationsService(repository, auth, turnos);
-    const server = createApp({ auth, turnos, operations }).listen(0, "127.0.0.1");
+    const birthdayService = new CumpleanosService(
+        birthdays,
+        auth,
+        turnos,
+    );
+    const server = createApp({
+        auth,
+        turnos,
+        operations,
+        birthdays: birthdayService,
+    }).listen(0, "127.0.0.1");
     await new Promise((resolve) => server.once("listening", resolve));
     context.after(
         () =>
@@ -247,6 +260,58 @@ test("HTTP: operaciones internas requieren personal y persisten datos manuales",
     assert.equal(restored.findAll("membresias").length, 2);
     assert.equal(restored.findAll("asistencias").length, 1);
     assert.equal(restored.findAll("partidos").length, 1);
+});
+
+test("HTTP: pagos posteriores solo se asocian a turnos cancelados por mora", async (context) => {
+    const { auth, operations, request } = await fixture(context);
+    const registered = await request("/auth/register", {
+        method: "POST",
+        data: clientData,
+    });
+    const clientId = registered.body.data.clienteId;
+    const employeeData = {
+        ...clientData,
+        email: "empleado@example.test",
+        rol: "empleado",
+    };
+    await auth.createStaff(employeeData);
+    const employee = await request("/auth/login", {
+        method: "POST",
+        data: employeeData,
+    });
+    const turnData = {
+        fecha: "2099-12-31",
+        horaInicio: "20:00",
+        horaFin: "21:00",
+        cantidadJugadores: 10,
+        incluyeLuces: false,
+        clienteId: clientId,
+    };
+    const lateTurn = operations.turnos.create(turnData, {
+        rol: "empleado",
+        clienteId: clientId,
+    });
+    lateTurn.cancelacionTardia = true;
+    operations.turnos.cancel(lateTurn.id);
+    const latePayment = await request("/interno/pagos", {
+        method: "POST",
+        cookie: employee.cookie,
+        data: { monto: 5000, tipo: "turno", turnoId: lateTurn.id },
+    });
+    assert.equal(latePayment.response.status, 201);
+    assert.equal(latePayment.body.data.turnoId, lateTurn.id);
+
+    const regularTurn = operations.turnos.create(
+        { ...turnData, horaInicio: "21:00", horaFin: "22:00" },
+        { rol: "empleado", clienteId: clientId },
+    );
+    operations.turnos.cancel(regularTurn.id);
+    const regularPayment = await request("/interno/pagos", {
+        method: "POST",
+        cookie: employee.cookie,
+        data: { monto: 5000, tipo: "turno", turnoId: regularTurn.id },
+    });
+    assert.equal(regularPayment.response.status, 400);
 });
 
 test("HTTP: fixture de liga actualiza tabla y detalle publico despues de cada resultado", async (context) => {

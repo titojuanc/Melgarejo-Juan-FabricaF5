@@ -2,12 +2,14 @@ import { Router } from "express";
 import { authenticationMiddleware, requireRoles, requireTrustedOrigin } from "../middlewares/auth.js";
 import authService from "../services/AuthService.js";
 import operationsService from "../services/OperationsService.js";
+import cumpleanosService from "../services/CumpleanosService.js";
 import publicInfoService from "../services/PublicInfoService.js";
 
 export function createPublicInfoRoutes(
     service = publicInfoService,
     auth = authService,
     operations = operationsService,
+    birthdays = cumpleanosService,
 ) {
     const router = Router();
     const authenticate = authenticationMiddleware(auth);
@@ -33,9 +35,24 @@ export function createPublicInfoRoutes(
         requireRoles("cliente"),
         (req, res, next) => {
             try {
+                res.status(201).json({
+                    success: true,
+                    data: birthdays.create(req.body, req.user),
+                });
+            } catch (error) {
+                next(error);
+            }
+        },
+    );
+    router.get(
+        "/cumpleanos/mis",
+        authenticate,
+        requireRoles("cliente"),
+        (req, res, next) => {
+            try {
                 res.json({
                     success: true,
-                    data: service.createBirthdayInquiry(req.body, req.user),
+                    data: birthdays.getMine(req.user.clienteId),
                 });
             } catch (error) {
                 next(error);

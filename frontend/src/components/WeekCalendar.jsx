@@ -4,13 +4,13 @@ import {
     weekDates,
     HORARIOS,
     endTime,
-    isOccupied,
+    isAvailable,
 } from "../utils/turnos.js";
 
 export default function WeekCalendar({
     anchor,
     onWeekChange,
-    turnos,
+    slots,
     selected,
     onSelect,
 }) {
@@ -125,8 +125,8 @@ export default function WeekCalendar({
                                 </th>
                                 {days.map((date) => {
                                     const fecha = dateKey(date);
-                                    const occupied = isOccupied(
-                                        turnos,
+                                    const available = isAvailable(
+                                        slots,
                                         fecha,
                                         hora,
                                         endTime(hora),
@@ -134,6 +134,7 @@ export default function WeekCalendar({
                                     const past =
                                         new Date(`${fecha}T${hora}:00`) <=
                                         new Date();
+                                    const unavailable = !available;
                                     const active =
                                         selected?.fecha === fecha &&
                                         selected?.horaInicio === hora;
@@ -141,14 +142,14 @@ export default function WeekCalendar({
                                         <td key={fecha}>
                                             <button
                                                 className={`time-slot ${active ? "selected" : ""}`}
-                                                disabled={occupied || past}
+                                                disabled={unavailable || past}
                                                 aria-pressed={active}
-                                                aria-label={`${fecha}, ${hora}, ${past ? "horario pasado" : occupied ? "ocupado" : "disponible"}`}
+                                                aria-label={`${fecha}, ${hora}, ${past ? "horario pasado" : available ? "disponible" : "no disponible"}`}
                                                 title={
                                                     past
                                                         ? "Horario pasado"
-                                                        : occupied
-                                                          ? "Ocupado"
+                                                        : unavailable
+                                                          ? "No disponible"
                                                           : `${hora} a ${endTime(hora)}`
                                                 }
                                                 onClick={() =>
@@ -161,8 +162,8 @@ export default function WeekCalendar({
                                             >
                                                 {active
                                                     ? "Elegido"
-                                                    : occupied
-                                                      ? "Ocupado"
+                                                    : unavailable
+                                                      ? "No disponible"
                                                       : past
                                                         ? "Pasado"
                                                         : "Libre"}

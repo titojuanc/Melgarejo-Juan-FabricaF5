@@ -6,9 +6,11 @@ import { join } from "node:path";
 import { AuthRepository } from "../repositories/AuthRepository.js";
 import { OperationsRepository } from "../repositories/OperationsRepository.js";
 import { TurnoRepository } from "../repositories/TurnoRepository.js";
+import { CumpleanosRepository } from "../repositories/CumpleanosRepository.js";
 import { AuthService } from "./AuthService.js";
 import { OperationsService } from "./OperationsService.js";
 import { TurnoService } from "./TurnoService.js";
+import { CumpleanosService } from "./CumpleanosService.js";
 import { createApp } from "../app.js";
 import { PublicInfoService } from "./PublicInfoService.js";
 
@@ -16,13 +18,33 @@ async function httpFixture(context) {
     const directory = mkdtempSync(join(tmpdir(), "fabrica-public-info-"));
     context.after(() => rmSync(directory, { recursive: true, force: true }));
     const auth = new AuthService(new AuthRepository(join(directory, "auth.json")));
-    const turnos = new TurnoService(new TurnoRepository(), auth);
+    const birthdayRepository = new CumpleanosRepository(
+        join(directory, "cumpleanos.json"),
+    );
+    const turnos = new TurnoService(
+        new TurnoRepository(),
+        auth,
+        birthdayRepository,
+    );
     const operations = new OperationsService(
         new OperationsRepository(join(directory, "operations.json")),
         auth,
         turnos,
     );
-    const server = createApp({ auth, turnos, operations }).listen(0, "127.0.0.1");
+    const publicInfo = new PublicInfoService();
+    const birthdays = new CumpleanosService(
+        birthdayRepository,
+        auth,
+        turnos,
+        publicInfo,
+    );
+    const server = createApp({
+        auth,
+        turnos,
+        operations,
+        publicInfo,
+        birthdays,
+    }).listen(0, "127.0.0.1");
     await new Promise((resolve) => server.once("listening", resolve));
     context.after(
         () =>
@@ -59,7 +81,7 @@ async function httpFixture(context) {
         };
     }
 
-    return { auth, request };
+    return { auth, birthdays, request };
 }
 
 test("Gym expone solo membresia normal y el horario destacado de la referencia", () => {
@@ -107,37 +129,6 @@ test("los paquetes de cumpleaños reflejan la referencia y no inventan precios",
     assert.ok(packages.every((item) => item.precio === undefined));
 });
 
-test("una consulta de cumpleaños valida antelacion y no confirma ni ocupa cancha", () => {
-    const service = new PublicInfoService();
-    const result = service.createBirthdayInquiry({
-        paqueteId: "full",
-        fecha: "2099-12-31",
-        horaInicio: "20:00",
-    });
-    assert.equal(result.consulta.duracionHoras, 2);
-    assert.equal(result.consulta.confirmada, false);
-    assert.equal(result.consulta.bloqueaCancha, false);
-    assert.match(result.mensaje, /Consulta simulada/);
-    assert.throws(
-        () =>
-            service.createBirthdayInquiry({
-                paqueteId: "desconocido",
-                fecha: "2099-12-31",
-                horaInicio: "20:00",
-            }),
-        { statusCode: 400 },
-    );
-    assert.throws(
-        () =>
-            service.createBirthdayInquiry({
-                paqueteId: "basico",
-                fecha: "2026-10-08",
-                horaInicio: "20:00",
-            }),
-        { statusCode: 400 },
-    );
-});
-
 test("torneos publica cupos y tabla mostrada sin DNI ni partidos inventados", () => {
     const service = new PublicInfoService();
     const tournaments = service.getTournaments();
@@ -181,8 +172,8 @@ test("torneos publica cupos y tabla mostrada sin DNI ni partidos inventados", ()
     assert.throws(() => service.getTournament(404), { statusCode: 404 });
 });
 
-test("HTTP: contenido publico y consulta simulada autenticada", async (context) => {
-    const { request } = await httpFixture(context);
+test("HTTP: contenido publico y solicitudes de cumpleanos autenticadas", async (context) => {
+    const { request, birthdays } = await httpFixture(context);
     assert.equal((await request("/gym")).response.status, 200);
     assert.equal(
         (await request("/cumpleanos/paquetes")).body.data.length,
@@ -220,9 +211,18 @@ test("HTTP: contenido publico y consulta simulada autenticada", async (context) 
             horaInicio: "20:00",
         },
     });
-    assert.equal(inquiry.response.status, 200);
-    assert.equal(inquiry.body.data.consulta.confirmada, false);
-    assert.equal(inquiry.body.data.consulta.bloqueaCancha, false);
+    assert.equal(inquiry.response.status, 201);
+    assert.equal(inquiry.body.data.estado, "Pendiente");
+    assert.equal(inquiry.body.data.horaFin, "22:00");
+    assert.equal(
+        (await request("/cumpleanos/mis", { cookie: registered.cookie })).body
+            .data.length,
+        1,
+    );
+    assert.equal(
+        new CumpleanosRepository(birthdays.repository.filePath).findAll().length,
+        1,
+    );
     const externalInquiry = await request("/cumpleanos/consultas", {
         method: "POST",
         cookie: registered.cookie,

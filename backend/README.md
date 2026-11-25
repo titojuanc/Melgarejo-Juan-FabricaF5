@@ -32,23 +32,25 @@ Todas las respuestas mantienen `{ success: true, data }` o `{ success: false, me
 | ----------------------------- | ----------------------------------- | ---------------------------------------------------------------- |
 | `GET /gym`                    | Publico                             | Membresia normal y horarios destacados visibles en referencia.   |
 | `GET /cumpleanos/paquetes`    | Publico                             | Basico, Full y Premium; no incluye precios.                      |
-| `POST /cumpleanos/consultas`  | Cliente y origen permitido          | Consulta simulada con 48 h de anticipacion; no persiste ni reserva cancha. |
+| `POST /cumpleanos/consultas`  | Cliente autenticado y origen permitido | Crea una solicitud pendiente persistente; requiere 48 h de anticipacion. |
+| `GET /cumpleanos/mis`         | Cliente autenticado                  | Lista las solicitudes propias y sus estados.                 |
 | `GET /torneos`                | Publico                             | Referencias Figma y torneos operativos con fixture/tabla actualizados. |
 | `GET /torneos/:id`            | Publico                             | Detalle, rondas, resultados, descansos y tabla pública.          |
 
-El horario completo del gimnasio no se ve en la captura. Los torneos son datos ilustrativos de Figma, no registros reales. Una consulta de cumpleaños valida el paquete y fecha/hora, pero no confirma el evento, no se guarda y no bloquea la cancha.
+El horario completo del gimnasio no se ve en la captura. Los torneos son datos ilustrativos de Figma, no registros reales. Las solicitudes de cumpleaños deben confirmarse por el personal para bloquear la cancha durante la duracion del paquete (dos o tres horas). No se puede crear una solicitud que se superponga con un cumpleaños confirmado; las pendientes no bloquean otras solicitudes. La disponibilidad se comprueba nuevamente al confirmar.
 
 ### Turnos
 
 | Metodo y ruta                     | Acceso                            | Resultado                                                |
 | ---------------------------------- | --------------------------------- | -------------------------------------------------------- |
-| `GET /turnos/disponibilidad`      | Publico                           | Fecha, horario y estado; sin datos del cliente.          |
+| `GET /turnos/disponibilidad?fecha=YYYY-MM-DD` | Publico                 | Franjas libres de una hora para esa fecha; sin datos de clientes. |
 | `GET /turnos/mis`                 | Cliente autenticado               | Solo reservas asociadas al cliente de la sesion.         |
 | `GET /turnos`, `GET /turnos/:id`  | Empleado o admin                  | Listado y consulta interna.                              |
 | `POST /turnos`                    | Sesion y origen permitido         | El cliente se asigna desde la sesion; personal debe indicar uno existente. |
+| `POST /turnos/:id/cancelar`       | Cliente dueño, empleado o admin   | El cliente solo cancela los propios; con menos de 12 h se marca como tardia. El personal registra manualmente cualquier pago recibido. |
 | `PUT/DELETE /turnos/:id`           | Empleado/admin y origen permitido | Actualiza campos permitidos o elimina turno.             |
 
-El backend valida fecha real y futura, horario, cantidad de jugadores, perfil de cliente y superposicion. Un conflicto devuelve 409. Los clientes no pueden cambiar propietario, editar ni cancelar reservas; tampoco pueden consultar el listado interno.
+El backend valida fecha real y futura, horario de atencion de 12:00 a 22:00, duracion exacta de una hora, cantidad de jugadores, perfil de cliente y superposicion. La disponibilidad publica devuelve solo las franjas libres de la fecha consultada. Un conflicto devuelve 409. Los clientes no pueden cambiar propietario, editar ni consultar el listado interno.
 
 ### Operaciones internas
 
@@ -57,6 +59,9 @@ Las rutas bajo `/interno` requieren sesion de empleado o administrador. Ambos ro
 | Metodo y ruta                        | Operacion                                           |
 | ------------------------------------ | --------------------------------------------------- |
 | `GET /interno/clientes`              | Buscar clientes por id/nombre para asociar registros. |
+| `GET /interno/cumpleanos`            | Consultar solicitudes y estados de cumpleaños. |
+| `POST /interno/cumpleanos/:id/confirmar` | Confirmar una solicitud pendiente si no hay superposiciones. |
+| `POST /interno/cumpleanos/:id/cancelar` | Cancelar una solicitud pendiente o confirmada y liberar la cancha. |
 | `GET/POST /interno/pagos`            | Consultar y registrar pagos recibidos manualmente. |
 | `GET/POST /interno/gym/membresias`   | Consultar y registrar periodos de membresia.       |
 | `GET/POST /interno/gym/asistencias`  | Consultar y registrar asistencia presencial.       |
@@ -70,7 +75,7 @@ Los pagos guardan el importe ingresado por el personal y deben asociarse a un tu
 
 Cada torneo define formato (`liga` o `copa`), fechas e intervalo de dias entre partidos. La liga genera una rueda todos-contra-todos, con descansos cuando la cantidad de equipos es impar. La tabla cuenta partidos finalizados con 3/1/0 puntos y desempata por diferencia de gol, goles a favor y nombre. La copa sortea los equipos, asigna pases automaticos para completar la llave y crea cada ronda siguiente cuando se cargan todos los resultados de la ronda actual; un empate requiere ganador por penales y al terminar se publica el campeon. La fecha final debe alcanzar para todos los partidos. Los torneos operativos aparecen en las rutas publicas; los datos de referencia Figma siguen identificados y separados. Ninguna ruta publica expone telefono, email o DNI.
 
-Los datos operativos se guardan en `backend/data/operations.json`, excluido de Git. Si ese archivo no existe, el repositorio arranca desde la semilla versionada [operations.seed.json](src/fixtures/operations.seed.json); el primer cambio operativo crea el archivo local. Si el archivo ya existe, se conserva y no se mezcla con la semilla. La variable `OPERATIONS_DATA_FILE` personalizada inicia vacia. Los torneos ilustrativos de las rutas publicas permanecen separados y no se exponen datos personales.
+Los datos operativos se guardan en `backend/data/operations.json`, excluido de Git. Si ese archivo no existe, el repositorio arranca desde la semilla versionada [operations.seed.json](src/fixtures/operations.seed.json); el primer cambio operativo crea el archivo local. Si el archivo ya existe, se conserva y no se mezcla con la semilla. La variable `OPERATIONS_DATA_FILE` personalizada inicia vacia. Las solicitudes de cumpleaños se guardan en `backend/data/cumpleanos.json` y se pueden redirigir mediante `BIRTHDAYS_DATA_FILE`. Los torneos ilustrativos de las rutas publicas permanecen separados y no se exponen datos personales.
 La consulta interna de clientes devuelve solo `id` y `nombre`; no permite editar perfiles ni devuelve telefono o email.
 
 Registro:
@@ -130,6 +135,7 @@ Configuracion por variables de entorno antes de iniciar Node; no se cargan archi
 - `PORT`: puerto del backend, por defecto 3000.
 - `FRONTEND_ORIGIN`: origenes permitidos separados por comas; por defecto localhost y 127.0.0.1 en 5173 y 5174.
 - `AUTH_DATA_FILE`: ruta del archivo local de cuentas, opcional.
+- `BIRTHDAYS_DATA_FILE`: ruta local alternativa para las solicitudes de cumpleaños, opcional.
 - `SESSION_SECRET`: secreto de al menos 32 caracteres. En desarrollo se genera uno aleatorio si no se configura. En produccion es obligatorio.
 - `NODE_ENV=production`: activa cookies Secure; requiere HTTPS y configuracion adecuada del despliegue.
 
@@ -137,4 +143,4 @@ El archivo local soporta una unica instancia del backend. Las altas simultaneas 
 
 Los middlewares `requireAuthentication`, `requireRoles` y `requireTrustedOrigin` protegen las operaciones de turnos. Los paneles internos, recuperacion de contrasena y verificacion de email quedan pendientes.
 
-WhatsApp sera simulado en la entrega, sin mensajes ni enlaces reales. El backend implementa autenticacion y turnos ligados a la sesion.
+WhatsApp no forma parte del flujo implementado: no se envian mensajes ni se generan enlaces reales. El backend implementa autenticacion y turnos ligados a la sesion.

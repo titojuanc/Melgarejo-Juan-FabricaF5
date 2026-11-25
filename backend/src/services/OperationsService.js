@@ -98,7 +98,10 @@ export class OperationsService {
         let membresiaId = null;
         if (data.tipo === "turno" && isId(data.turnoId) && !Object.hasOwn(data, "membresiaId")) {
             const turno = this.turnos.getById(data.turnoId);
-            if (turno.estado === "Cancelado") {
+            if (
+                turno.estado === "Cancelado" &&
+                turno.cancelacionTardia !== true
+            ) {
                 throw new BadRequestError("No se pueden registrar pagos de turnos cancelados.");
             }
             clienteId = turno.clienteId;

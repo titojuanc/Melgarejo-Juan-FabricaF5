@@ -64,6 +64,38 @@ test("los turnos cargados conservan los metodos del modelo", (context) => {
     assert.equal(turno.estado, "Confirmado");
 });
 
+test("persiste la marca de cancelacion tardia y migra registros anteriores", (context) => {
+    const filePath = temporaryPath(context);
+    const repository = new TurnoRepository(filePath);
+    const turno = repository.create(turnoData);
+    turno.cancelacionTardia = true;
+    repository.save();
+    assert.equal(
+        new TurnoRepository(filePath).findById(turno.id).cancelacionTardia,
+        true,
+    );
+
+    writeFileSync(
+        filePath,
+        JSON.stringify({
+            turnos: [
+                {
+                    id: 1,
+                    fecha: turnoData.fecha,
+                    horaInicio: turnoData.horaInicio,
+                    horaFin: turnoData.horaFin,
+                    cantidadJugadores: turnoData.cantidadJugadores,
+                    incluyeLuces: turnoData.incluyeLuces,
+                    estado: "Pendiente",
+                    clienteId: turnoData.clienteId,
+                },
+            ],
+            nextId: 2,
+        }),
+    );
+    assert.equal(new TurnoRepository(filePath).findById(1).cancelacionTardia, false);
+});
+
 test("arranca vacio si el archivo no existe", (context) => {
     const filePath = temporaryPath(context);
     const repository = new TurnoRepository(filePath);

@@ -8,6 +8,7 @@ import {
     Flag,
     LoaderCircle,
     Plus,
+    PartyPopper,
     RefreshCw,
     Trophy,
     Users,
@@ -21,6 +22,7 @@ import { formatDate } from "../utils/turnos.js";
 
 const panels = [
     { id: "pagos", label: "Pagos", icon: CreditCard },
+    { id: "cumpleanos", label: "Cumpleaños", icon: PartyPopper },
     { id: "gym", label: "Gimnasio", icon: Dumbbell },
     { id: "torneos", label: "Torneos", icon: Trophy },
     { id: "usuarios", label: "Usuarios", icon: Users, adminOnly: true },
@@ -28,6 +30,14 @@ const panels = [
 
 function clientName(clients, id) {
     return clients.find((client) => client.id === Number(id))?.nombre || `#${id}`;
+}
+
+function birthdayPackageName(id) {
+    return {
+        basico: "Básico",
+        full: "Full",
+        premium: "Premium",
+    }[id] || id;
 }
 
 function dateTime(value) {
@@ -61,7 +71,10 @@ function PaymentPanel({ clients, payments, memberships, turnos, onChanged }) {
     const [membresiaId, setMembresiaId] = useState("");
     const [monto, setMonto] = useState("");
     const [busy, setBusy] = useState(false);
-    const activeTurnos = turnos.filter((turno) => turno.estado !== "Cancelado");
+    const payableTurnos = turnos.filter(
+        (turno) =>
+            turno.estado !== "Cancelado" || turno.cancelacionTardia === true,
+    );
 
     async function submit(event) {
         event.preventDefault();
@@ -118,9 +131,11 @@ function PaymentPanel({ clients, payments, memberships, turnos, onChanged }) {
                                 required
                             >
                                 <option value="">Seleccionar turno</option>
-                                {activeTurnos.map((turno) => (
+                                {payableTurnos.map((turno) => (
                                     <option key={turno.id} value={turno.id}>
                                         #{turno.id} · {formatDate(turno.fecha)} · {turno.horaInicio} · {clientName(clients, turno.clienteId)}
+                                        {turno.cancelacionTardia &&
+                                            " · Cancelación tardía"}
                                     </option>
                                 ))}
                             </select>
@@ -181,6 +196,105 @@ function PaymentPanel({ clients, payments, memberships, turnos, onChanged }) {
                     </table>
                 ) : <p className="empty-inline">Todavía no hay pagos registrados.</p>}
             </RecordsScroll>
+        </section>
+    );
+}
+
+function BirthdayRequestsPanel({ birthdays, clients, onChanged }) {
+    const { notify } = useNotifications();
+    const [busyId, setBusyId] = useState(null);
+    const pendingCount = birthdays.filter(
+        (item) => item.estado === "Pendiente",
+    ).length;
+
+    async function updateRequest(id, action) {
+        setBusyId(id);
+        try {
+            if (action === "confirmar") {
+                await service.confirmBirthdayRequest(id);
+                notify("Solicitud de cumpleaños confirmada.");
+            } else {
+                await service.cancelBirthdayRequest(id);
+                notify("Solicitud de cumpleaños cancelada.");
+            }
+            await onChanged();
+        } catch (error) {
+            notify(error.message, "error");
+        } finally {
+            setBusyId(null);
+        }
+    }
+
+    return (
+        <section className="management-panel" aria-labelledby="birthdays-title">
+            <div className="management-section-heading">
+                <div>
+                    <p className="eyebrow">SOLICITUDES PERSISTENTES</p>
+                    <h2 id="birthdays-title">Festejos de cumpleaños</h2>
+                </div>
+                <span className="management-count">{pendingCount} pendientes</span>
+            </div>
+            <RecordsScroll label="Solicitudes de cumpleaños">
+                {birthdays.length ? (
+                    <table className="records-table management-table">
+                        <caption className="sr-only">Solicitudes de cumpleaños</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Cliente</th>
+                                <th scope="col">Fecha</th>
+                                <th scope="col">Horario</th>
+                                <th scope="col">Paquete</th>
+                                <th scope="col">Estado</th>
+                                <th scope="col">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {[...birthdays].reverse().map((item) => (
+                                <tr key={item.id}>
+                                    <td>{clientName(clients, item.clienteId)}</td>
+                                    <td>{formatDate(item.fecha)}</td>
+                                    <td>{item.horaInicio}–{item.horaFin}</td>
+                                    <td>{birthdayPackageName(item.paqueteId)}</td>
+                                    <td>
+                                        <span className={`status-badge ${item.estado === "Confirmado" ? "status-confirmed" : item.estado === "Cancelado" ? "cancelled" : ""}`}>
+                                            {item.estado}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {item.estado !== "Cancelado" && (
+                                            <div className="birthday-actions">
+                                                {item.estado === "Pendiente" && (
+                                                    <button
+                                                        className="button primary"
+                                                        type="button"
+                                                        disabled={busyId === item.id}
+                                                        onClick={() => updateRequest(item.id, "confirmar")}
+                                                    >
+                                                        {busyId === item.id ? "Guardando..." : "Confirmar"}
+                                                    </button>
+                                                )}
+                                                <button
+                                                    className="button secondary"
+                                                    type="button"
+                                                    disabled={busyId === item.id}
+                                                    onClick={() => updateRequest(item.id, "cancelar")}
+                                                >
+                                                    Cancelar
+                                                </button>
+                                            </div>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                ) : (
+                    <p className="empty-inline">Todavía no hay solicitudes de cumpleaños.</p>
+                )}
+            </RecordsScroll>
+            <p className="form-hint light-hint management-note">
+                Solo las solicitudes confirmadas ocupan la cancha; confirmar una franja en conflicto será rechazado.
+            </p>
         </section>
     );
 }
@@ -638,22 +752,23 @@ export default function GestionPage() {
     const [section, setSection] = useState("pagos");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [data, setData] = useState({ clients: [], payments: [], memberships: [], attendances: [], tournaments: [] });
+    const [data, setData] = useState({ clients: [], payments: [], birthdays: [], memberships: [], attendances: [], tournaments: [] });
     const isStaff = user && ["empleado", "admin"].includes(user.rol);
     const visiblePanels = panels.filter((panel) => !panel.adminOnly || user?.rol === "admin");
 
     async function loadData(signal) {
         setError("");
         try {
-            const [clients, payments, memberships, attendances, tournaments] = await Promise.all([
+            const [clients, payments, birthdays, memberships, attendances, tournaments] = await Promise.all([
                 service.getClients(signal),
                 service.getPayments(signal),
+                service.getBirthdayRequests(signal),
                 service.getMemberships(signal),
                 service.getAttendances(signal),
                 service.getManagedTournaments(signal),
             ]);
             if (signal?.aborted) return;
-            setData({ clients, payments, memberships, attendances, tournaments });
+            setData({ clients, payments, birthdays, memberships, attendances, tournaments });
         } catch (failure) {
             if (failure.name === "AbortError") return;
             setError(failure.message);
@@ -699,6 +814,7 @@ export default function GestionPage() {
                 <div className="management-tabpanel">
                     <div className="management-panel-title"><ActiveIcon size={20} /><h2>{activePanel?.label}</h2></div>
                     {section === "pagos" && <PaymentPanel clients={data.clients} payments={data.payments} memberships={data.memberships} turnos={turnos} onChanged={refreshQuietly} />}
+                    {section === "cumpleanos" && <BirthdayRequestsPanel birthdays={data.birthdays} clients={data.clients} onChanged={refreshQuietly} />}
                     {section === "gym" && <GymPanel clients={data.clients} memberships={data.memberships} attendances={data.attendances} onChanged={refreshQuietly} />}
                     {section === "torneos" && <TournamentsPanel tournaments={data.tournaments} onChanged={refreshQuietly} />}
                     {section === "usuarios" && user.rol === "admin" && <UsersPanel />}

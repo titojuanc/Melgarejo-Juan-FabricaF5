@@ -35,6 +35,12 @@ function post(path, data) {
 export const getClients = (signal) => request("/interno/clientes", { signal });
 export const getPayments = (signal) => request("/interno/pagos", { signal });
 export const recordPayment = (data) => post("/interno/pagos", data);
+export const getBirthdayRequests = (signal) =>
+    request("/interno/cumpleanos", { signal });
+export const confirmBirthdayRequest = (id) =>
+    post(`/interno/cumpleanos/${encodeURIComponent(id)}/confirmar`, {});
+export const cancelBirthdayRequest = (id) =>
+    post(`/interno/cumpleanos/${encodeURIComponent(id)}/cancelar`, {});
 export const getMemberships = (signal) =>
     request("/interno/gym/membresias", { signal });
 export const createMembership = (data) =>

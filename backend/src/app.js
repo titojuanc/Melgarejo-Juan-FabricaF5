@@ -21,12 +21,15 @@ import { OperationsService } from "./services/OperationsService.js";
 import turnoService from "./services/TurnoService.js";
 import operationsService from "./services/OperationsService.js";
 import publicInfoService from "./services/PublicInfoService.js";
+import { CumpleanosService } from "./services/CumpleanosService.js";
+import cumpleanosService from "./services/CumpleanosService.js";
 
 export function createApp({
     auth = authService,
     turnos,
     operations,
     publicInfo = publicInfoService,
+    birthdays,
     authLimit = 20,
     sessionSecret = getSessionSecret()
 } = {}) {
@@ -40,6 +43,18 @@ export function createApp({
         (auth === authService
             ? operationsService
             : new OperationsService(undefined, auth, turnoApi));
+    const birthdaysApi =
+        birthdays ||
+        (auth === authService &&
+        turnoApi === turnoService &&
+        publicInfo === publicInfoService
+            ? cumpleanosService
+            : new CumpleanosService(
+                  turnoApi.birthdays,
+                  auth,
+                  turnoApi,
+                  publicInfo,
+              ));
     const app = express();
     app.disable("x-powered-by");
     app.use(cors({ origin: frontendOrigins, credentials: true }));
@@ -54,8 +69,8 @@ export function createApp({
         })
     );
     app.use("/auth", createAuthRoutes(auth, authLimit));
-    app.use(createPublicInfoRoutes(publicInfo, auth, operationsApi));
-    app.use("/interno", createOperationsRoutes(operationsApi, auth));
+    app.use(createPublicInfoRoutes(publicInfo, auth, operationsApi, birthdaysApi));
+    app.use("/interno", createOperationsRoutes(operationsApi, auth, birthdaysApi));
     app.use(createRoutes(turnoApi, auth));
 
     app.use(routeNotFoundHandler);

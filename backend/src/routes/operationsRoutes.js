@@ -7,6 +7,7 @@ import {
 } from "../middlewares/auth.js";
 import authService from "../services/AuthService.js";
 import operationsService from "../services/OperationsService.js";
+import cumpleanosService from "../services/CumpleanosService.js";
 
 function endpoint(action, status = 200) {
     return (req, res, next) => {
@@ -18,13 +19,32 @@ function endpoint(action, status = 200) {
     };
 }
 
-export function createOperationsRoutes(service = operationsService, auth = authService) {
+export function createOperationsRoutes(
+    service = operationsService,
+    auth = authService,
+    birthdays = cumpleanosService,
+) {
     const router = Router();
     const authenticate = authenticationMiddleware(auth);
     const staffOnly = [authenticate, requireRoles("empleado", "admin")];
     const staffMutation = [requireTrustedOrigin, ...staffOnly];
 
     router.get("/clientes", ...staffOnly, endpoint(() => service.listClients()));
+    router.get(
+        "/cumpleanos",
+        ...staffOnly,
+        endpoint(() => birthdays.getAll()),
+    );
+    router.post(
+        "/cumpleanos/:id/confirmar",
+        ...staffMutation,
+        endpoint((req) => birthdays.confirm(Number(req.params.id))),
+    );
+    router.post(
+        "/cumpleanos/:id/cancelar",
+        ...staffMutation,
+        endpoint((req) => birthdays.cancel(Number(req.params.id))),
+    );
     router.get("/pagos", ...staffOnly, endpoint(() => service.listPayments()));
     router.post(
         "/pagos",

@@ -4,7 +4,11 @@ import { Link } from "react-router-dom";
 import PublicDataState from "../components/PublicDataState.jsx";
 import { useAuth } from "../components/AuthProvider.jsx";
 import { useNotifications } from "../components/Notifications.jsx";
-import { createBirthdayInquiry, getBirthdayPackages } from "../services/publicInfo.js";
+import {
+    createBirthdayRequest,
+    getBirthdayPackages,
+    getMyBirthdayRequests,
+} from "../services/publicInfo.js";
 import { dateKey } from "../utils/turnos.js";
 
 export default function BirthdayPage() {
@@ -14,10 +18,19 @@ export default function BirthdayPage() {
     const [packageId, setPackageId] = useState("");
     const [busy, setBusy] = useState(false);
     const [confirmation, setConfirmation] = useState(null);
+    const [birthdayRequests, setBirthdayRequests] = useState([]);
+    const [requestsLoading, setRequestsLoading] = useState(false);
+    const [requestsError, setRequestsError] = useState("");
     const { user, loading: authLoading } = useAuth();
     const { notify } = useNotifications();
     const isClient = user?.rol === "cliente";
     const minimumDate = dateKey(new Date(Date.now() + 48 * 60 * 60 * 1000));
+    const selectedPackage = packages.find((item) => item.id === packageId);
+    const latestStartHour = Math.max(
+        12,
+        22 - (selectedPackage?.duracionHoras || 2),
+    );
+    const latestStartTime = `${String(latestStartHour).padStart(2, "0")}:00`;
 
     async function load(signal) {
         setLoading(true);
@@ -39,6 +52,29 @@ export default function BirthdayPage() {
         return () => controller.abort();
     }, []);
 
+    useEffect(() => {
+        if (!isClient) {
+            setBirthdayRequests([]);
+            setRequestsLoading(false);
+            setRequestsError("");
+            return undefined;
+        }
+        const controller = new AbortController();
+        setRequestsLoading(true);
+        setRequestsError("");
+        getMyBirthdayRequests(controller.signal)
+            .then(setBirthdayRequests)
+            .catch((failure) => {
+                if (failure.name !== "AbortError") {
+                    setRequestsError(failure.message);
+                }
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) setRequestsLoading(false);
+            });
+        return () => controller.abort();
+    }, [isClient, user?.id]);
+
     async function submit(event) {
         event.preventDefault();
         if (!event.currentTarget.reportValidity()) return;
@@ -47,13 +83,14 @@ export default function BirthdayPage() {
         setBusy(true);
         setConfirmation(null);
         try {
-            const result = await createBirthdayInquiry({
+            const result = await createBirthdayRequest({
                 paqueteId: packageId,
                 fecha: data.get("fecha"),
                 horaInicio: data.get("horaInicio"),
             });
             setConfirmation(result);
-            notify(result.mensaje);
+            setBirthdayRequests((current) => [...current, result]);
+            notify("La solicitud quedó pendiente de confirmación.");
         } catch (failure) {
             notify(failure.message, "error");
         } finally {
@@ -108,7 +145,7 @@ export default function BirthdayPage() {
 
                     <section className="birthday-inquiry-layout">
                         <form className="birthday-inquiry" onSubmit={submit} aria-busy={busy}>
-                            <p className="eyebrow">CONSULTÁ TU FECHA</p>
+                            <p className="eyebrow">SOLICITÁ TU FECHA</p>
                             <h2><PartyPopper size={21} /> Coordinemos el festejo</h2>
                             <label className="field" htmlFor="birthday-date">
                                 <span>Día</span>
@@ -127,19 +164,22 @@ export default function BirthdayPage() {
                                     id="birthday-time"
                                     name="horaInicio"
                                     type="time"
+                                    min="12:00"
+                                    max={latestStartTime}
+                                    step="3600"
                                     required
                                     disabled={busy}
                                 />
                             </label>
-                            <p className="form-hint">La consulta requiere al menos 48 horas de anticipación.</p>
+                            <p className="form-hint">La solicitud requiere al menos 48 horas de anticipación y queda pendiente hasta que el personal la confirme.</p>
                             {!authLoading && !isClient && (
                                 <p className="form-hint">
-                                    Para simular la consulta, ingresá con una cuenta de cliente. No se envían mensajes ni se confirma una reserva.
+                                    Para solicitar un festejo, ingresá con una cuenta de cliente. El personal deberá confirmar la fecha.
                                 </p>
                             )}
                             <button className="button primary" type="submit" disabled={busy || authLoading || !isClient}>
                                 {busy ? <LoaderCircle className="spin" size={18} /> : <CalendarDays size={18} />}
-                                {busy ? "Consultando..." : "Simular consulta"}
+                                {busy ? "Enviando solicitud..." : "Solicitar festejo"}
                             </button>
                             {!authLoading && !user && (
                                 <Link className="text-link" to="/cuenta">Ingresar o crear cuenta</Link>
@@ -151,12 +191,34 @@ export default function BirthdayPage() {
                     </section>
 
                     {confirmation && (
-                        <section className="simulation-confirmation" role="status" aria-live="polite">
+                        <section className="birthday-confirmation" role="status" aria-live="polite">
                             <CheckCircle2 size={21} />
                             <div>
-                                <h2>Consulta simulada</h2>
-                                <p>{confirmation.mensaje}</p>
-                                <p>{confirmation.consulta.fecha} · {confirmation.consulta.horaInicio} · {confirmation.consulta.duracionHoras} h</p>
+                                <h2>Solicitud registrada</h2>
+                                <p>Quedó pendiente de confirmación del personal.</p>
+                                <p>{confirmation.fecha} · {confirmation.horaInicio}–{confirmation.horaFin}</p>
+                            </div>
+                        </section>
+                    )}
+                    {isClient && (
+                        <section className="birthday-confirmation" aria-labelledby="birthday-requests-title">
+                            <div>
+                                <h2 id="birthday-requests-title">Mis solicitudes</h2>
+                                {requestsLoading ? (
+                                    <p role="status">Cargando tus solicitudes...</p>
+                                ) : requestsError ? (
+                                    <p role="alert">{requestsError}</p>
+                                ) : birthdayRequests.length === 0 ? (
+                                    <p>Todavía no tenés solicitudes de cumpleaños.</p>
+                                ) : (
+                                    <ul>
+                                        {birthdayRequests.map((item) => (
+                                            <li key={item.id}>
+                                                {item.fecha} · {item.horaInicio}–{item.horaFin} · {item.estado}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
                             </div>
                         </section>
                     )}

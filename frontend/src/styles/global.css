@@ -1297,7 +1297,7 @@ main {
     font-weight: 800;
     text-transform: uppercase;
 }
-.simulation-confirmation {
+.birthday-confirmation {
     display: flex;
     gap: 14px;
     margin-top: 20px;
@@ -1305,12 +1305,17 @@ main {
     border-left: 4px solid var(--green);
     background: #eef5eb;
 }
-.simulation-confirmation h2,
-.simulation-confirmation p {
+.birthday-confirmation h2,
+.birthday-confirmation p {
     margin-bottom: 5px;
 }
-.simulation-confirmation p:last-child {
+.birthday-confirmation p:last-child {
     margin: 0;
+}
+.birthday-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
 }
 .reference-notice {
     display: flex;

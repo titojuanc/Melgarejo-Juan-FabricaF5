@@ -14,11 +14,17 @@ import {
 test("los servicios respetan las rutas, metodos y formato de la API", async (context) => {
     const calls = [];
     const turno = { id: 1, fecha: "2026-11-09" };
+    const slots = [
+        { fecha: "2026-11-09", horaInicio: "12:00", horaFin: "13:00" },
+    ];
     context.mock.method(globalThis, "fetch", async (url, options) => {
         calls.push({ url, ...options });
-        return Response.json({ success: true, data: turno });
+        return Response.json({
+            success: true,
+            data: url.includes("/disponibilidad") ? slots : turno,
+        });
     });
-    assert.deepEqual(await getAvailability(), turno);
+    assert.deepEqual(await getAvailability("2026-11-09"), slots);
     assert.deepEqual(await getMine(), turno);
     assert.deepEqual(await getTurnos(), turno);
     await createTurno(turno);
@@ -26,7 +32,10 @@ test("los servicios respetan las rutas, metodos y formato de la API", async (con
     await confirmTurno(1);
     await cancelTurno(1);
     await deleteTurno(1);
-    assert.equal(calls[0].url, "http://localhost:3000/turnos/disponibilidad");
+    assert.equal(
+        calls[0].url,
+        "http://localhost:3000/turnos/disponibilidad?fecha=2026-11-09",
+    );
     assert.equal(calls[0].credentials, "include");
     assert.equal(calls[1].url, "http://localhost:3000/turnos/mis");
     assert.equal(calls[2].url, "http://localhost:3000/turnos");

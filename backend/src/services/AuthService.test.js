@@ -6,7 +6,11 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { AuthRepository } from "../repositories/AuthRepository.js";
+import { TurnoRepository } from "../repositories/TurnoRepository.js";
+import { CumpleanosRepository } from "../repositories/CumpleanosRepository.js";
 import { AuthService } from "./AuthService.js";
+import { TurnoService } from "./TurnoService.js";
+import { CumpleanosService } from "./CumpleanosService.js";
 import { createApp } from "../app.js";
 
 export const clientData = {
@@ -95,7 +99,23 @@ test("las cuentas internas tienen rol validado y no crean clientes", async (cont
 
 async function httpFixture(context, limit = 20) {
     const setup = fixture(context);
-    const app = createApp({ auth: setup.service, authLimit: limit });
+    const birthdays = new CumpleanosRepository();
+    const turnos = new TurnoService(
+        new TurnoRepository(),
+        setup.service,
+        birthdays,
+    );
+    const birthdayService = new CumpleanosService(
+        birthdays,
+        setup.service,
+        turnos,
+    );
+    const app = createApp({
+        auth: setup.service,
+        turnos,
+        birthdays: birthdayService,
+        authLimit: limit,
+    });
     const server = app.listen(0, "127.0.0.1");
     await new Promise((resolve) => server.once("listening", resolve));
     context.after(
@@ -313,7 +333,9 @@ test("HTTP: limita intentos, mantiene disponibilidad publica y protege turnos", 
     assert.equal(limited.response.status, 429);
     assert.equal(limited.body.success, false);
     assert.ok(limited.response.headers.get("retry-after"));
-    const disponibilidad = await request("/turnos/disponibilidad");
+    const disponibilidad = await request(
+        "/turnos/disponibilidad?fecha=2099-12-31",
+    );
     assert.equal(disponibilidad.response.status, 200);
     assert.ok(Array.isArray(disponibilidad.body.data));
     assert.equal((await request("/turnos")).response.status, 401);

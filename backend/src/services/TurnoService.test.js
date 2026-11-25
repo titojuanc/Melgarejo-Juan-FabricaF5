@@ -5,8 +5,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { AuthRepository } from "../repositories/AuthRepository.js";
 import { TurnoRepository } from "../repositories/TurnoRepository.js";
+import { CumpleanosRepository } from "../repositories/CumpleanosRepository.js";
 import { AuthService } from "./AuthService.js";
 import { TurnoService } from "./TurnoService.js";
+import { CumpleanosService } from "./CumpleanosService.js";
 import { createApp } from "../app.js";
 
 const clientData = {
@@ -22,8 +24,17 @@ async function fixture(context) {
     const directory = mkdtempSync(join(tmpdir(), "fabrica-turnos-"));
     context.after(() => rmSync(directory, { recursive: true, force: true }));
     const auth = new AuthService(new AuthRepository(join(directory, "auth.json")));
-    const turnos = new TurnoService(new TurnoRepository(), auth);
-    const server = createApp({ auth, turnos }).listen(0, "127.0.0.1");
+    const birthdays = new CumpleanosRepository();
+    const turnos = new TurnoService(new TurnoRepository(), auth, birthdays);
+    const birthdayService = new CumpleanosService(
+        birthdays,
+        auth,
+        turnos,
+    );
+    const server = createApp({ auth, turnos, birthdays: birthdayService }).listen(
+        0,
+        "127.0.0.1",
+    );
     await new Promise((resolve) => server.once("listening", resolve));
     context.after(
         () =>
@@ -113,14 +124,20 @@ test("HTTP: clientes solo acceden a sus reservas y no pueden modificar identidad
         (await request("/turnos/mis", { cookie: secondClient.cookie })).body.data.length,
         0,
     );
-    const availability = await request("/turnos/disponibilidad");
+    const availability = await request(
+        "/turnos/disponibilidad?fecha=2099-12-31",
+    );
     assert.equal(availability.response.status, 200);
+    assert.equal(availability.body.data.length, 9);
     assert.deepEqual(Object.keys(availability.body.data[0]).sort(), [
-        "estado",
         "fecha",
         "horaFin",
         "horaInicio",
     ]);
+    assert.equal(
+        availability.body.data.some((slot) => slot.horaInicio === "20:00"),
+        false,
+    );
     assert.equal(
         (await request("/turnos/mis", { cookie: registered.cookie })).body.data[0]
             .clienteId,
@@ -179,6 +196,17 @@ test("HTTP: clientes solo acceden a sus reservas y no pueden modificar identidad
     });
     assert.equal(updated.response.status, 200);
     assert.equal(updated.body.data.cantidadJugadores, 12);
+    const lastSlot = await request("/turnos", {
+        method: "POST",
+        cookie: staff.cookie,
+        data: {
+            ...payload,
+            horaInicio: "21:00",
+            horaFin: "22:00",
+            clienteId: registered.body.data.clienteId,
+        },
+    });
+    assert.equal(lastSlot.response.status, 201);
 });
 
 test("HTTP: turnos rechaza fechas invalidas y reservas superpuestas", async (context) => {
@@ -212,6 +240,38 @@ test("HTTP: turnos rechaza fechas invalidas y reservas superpuestas", async (con
         cookie: registered.cookie,
     });
     assert.equal(invalid.response.status, 400);
+    const outsideHours = await request("/turnos", {
+        method: "POST",
+        data: { ...payload, horaInicio: "11:00", horaFin: "12:00" },
+        cookie: registered.cookie,
+    });
+    assert.equal(outsideHours.response.status, 400);
+    const wrongDuration = await request("/turnos", {
+        method: "POST",
+        data: { ...payload, horaFin: "22:00" },
+        cookie: registered.cookie,
+    });
+    assert.equal(wrongDuration.response.status, 400);
+    assert.equal(
+        (await request("/turnos/disponibilidad")).response.status,
+        400,
+    );
+    assert.equal(
+        (
+            await request(
+                "/turnos/disponibilidad?fecha=2099-02-30",
+            )
+        ).response.status,
+        400,
+    );
+    assert.equal(
+        (
+            await request(
+                "/turnos/disponibilidad?fecha=2020-01-01",
+            )
+        ).response.status,
+        400,
+    );
 });
 
 test("HTTP: el personal confirma y cancela turnos con transiciones validas", async (context) => {
@@ -289,6 +349,13 @@ test("HTTP: el personal confirma y cancela turnos con transiciones validas", asy
         ).response.status,
         409,
     );
+    const availability = await request(
+        "/turnos/disponibilidad?fecha=2099-12-31",
+    );
+    assert.equal(
+        availability.body.data.some((slot) => slot.horaInicio === "20:00"),
+        true,
+    );
     const replacement = await request("/turnos", {
         method: "POST",
         cookie: registered.cookie,
@@ -301,4 +368,61 @@ test("HTTP: el personal confirma y cancela turnos con transiciones validas", asy
         },
     });
     assert.equal(replacement.response.status, 201);
+});
+
+test("HTTP: el cliente cancela solo sus turnos y los menores a 12 horas quedan marcados", async (context) => {
+    context.mock.timers.enable({
+        apis: ["Date"],
+        now: new Date("2099-12-31T08:00:00"),
+    });
+    const { request } = await fixture(context);
+    const firstClient = await request("/auth/register", {
+        method: "POST",
+        data: clientData,
+    });
+    const turnoData = {
+        fecha: "2099-12-31",
+        horaInicio: "20:00",
+        horaFin: "21:00",
+        cantidadJugadores: 10,
+        incluyeLuces: false,
+    };
+    const exactCutoff = await request("/turnos", {
+        method: "POST",
+        cookie: firstClient.cookie,
+        data: turnoData,
+    });
+    const exactCutoffCancellation = await request(
+        `/turnos/${exactCutoff.body.data.id}/cancelar`,
+        { method: "POST", cookie: firstClient.cookie },
+    );
+    assert.equal(exactCutoffCancellation.response.status, 200);
+    assert.equal(exactCutoffCancellation.body.data.cancelacionTardia, false);
+
+    context.mock.timers.setTime(new Date("2099-12-31T12:00:00").getTime());
+    const lateClient = await request("/auth/register", {
+        method: "POST",
+        data: { ...clientData, email: "tarde@example.test" },
+    });
+    const lateOtherClient = await request("/auth/register", {
+        method: "POST",
+        data: { ...clientData, email: "otra-tarde@example.test" },
+    });
+    const lateTurno = await request("/turnos", {
+        method: "POST",
+        cookie: lateClient.cookie,
+        data: turnoData,
+    });
+    const otherOwnerCancellation = await request(
+        `/turnos/${lateTurno.body.data.id}/cancelar`,
+        { method: "POST", cookie: lateOtherClient.cookie },
+    );
+    assert.equal(otherOwnerCancellation.response.status, 403);
+    const lateCancellation = await request(
+        `/turnos/${lateTurno.body.data.id}/cancelar`,
+        { method: "POST", cookie: lateClient.cookie },
+    );
+    assert.equal(lateCancellation.response.status, 200);
+    assert.equal(lateCancellation.body.data.estado, "Cancelado");
+    assert.equal(lateCancellation.body.data.cancelacionTardia, true);
 });

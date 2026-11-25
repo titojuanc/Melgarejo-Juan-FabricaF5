@@ -1,4 +1,7 @@
-export const HORARIOS = ["18:00", "19:00", "20:00", "21:00", "22:00"];
+export const HORARIOS = Array.from(
+    { length: 10 },
+    (_, index) => `${String(index + 12).padStart(2, "0")}:00`,
+);
 
 export function dateKey(date) {
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -29,11 +32,20 @@ export function isOccupied(turnos, fecha, horaInicio, horaFin, excludeId) {
     );
 }
 
+export function isAvailable(slots, fecha, horaInicio, horaFin) {
+    return slots.some(
+        (slot) =>
+            slot.fecha === fecha &&
+            slot.horaInicio === horaInicio &&
+            slot.horaFin === horaFin,
+    );
+}
+
 export function validateReserva(
     data,
     turnos = [],
     excludeId,
-    { requireClientId = true } = {},
+    { requireClientId = true, availableSlotsOnly = false } = {},
 ) {
     const errors = {};
     const parsedDate = new Date(`${data.fecha}T12:00:00`);
@@ -53,10 +65,28 @@ export function validateReserva(
         data.horaFin <= data.horaInicio
     )
         errors.horaFin = "La hora de fin debe ser posterior al inicio.";
+    if (!errors.horaInicio && !errors.horaFin) {
+        const [startHour, startMinute] = data.horaInicio.split(":").map(Number);
+        const [endHour, endMinute] = data.horaFin.split(":").map(Number);
+        const startMinutes = startHour * 60 + startMinute;
+        const endMinutes = endHour * 60 + endMinute;
+        if (startMinutes < 12 * 60 || startMinutes > 21 * 60 || startMinute) {
+            errors.horaInicio =
+                "Selecciona una franja entre las 12:00 y las 21:00.";
+        }
+        if (
+            endMinutes - startMinutes !== 60 ||
+            endMinutes > 22 * 60 ||
+            endMinute
+        ) {
+            errors.horaFin =
+                "La reserva debe durar una hora y finalizar antes de las 22:00.";
+        }
+    }
     if (
         !errors.fecha &&
         !errors.horaInicio &&
-        new Date(`${data.fecha}T${data.horaInicio}:00`) < new Date()
+        new Date(`${data.fecha}T${data.horaInicio}:00`) <= new Date()
     )
         errors.fecha = "El turno debe comenzar en una fecha y hora futuras.";
     if (
@@ -75,9 +105,19 @@ export function validateReserva(
         !errors.fecha &&
         !errors.horaInicio &&
         !errors.horaFin &&
-        isOccupied(turnos, data.fecha, data.horaInicio, data.horaFin, excludeId)
+        (availableSlotsOnly
+            ? !isAvailable(turnos, data.fecha, data.horaInicio, data.horaFin)
+            : isOccupied(
+                  turnos,
+                  data.fecha,
+                  data.horaInicio,
+                  data.horaFin,
+                  excludeId,
+              ))
     )
-        errors.horaInicio = "El horario se superpone con otro turno.";
+        errors.horaInicio = availableSlotsOnly
+            ? "El horario ya no esta disponible."
+            : "El horario se superpone con otro turno.";
     return errors;
 }
 

@@ -150,56 +150,15 @@ Demostración técnica completa del sistema (Web + Front + Back), enfocada en un
 
 ---
 
-# Plan de trabajo — Parte 1 (lógica de negocio en backend)
+# Estado de implementación — Entrega 5
 
-Estado revisado el 3 de noviembre de 2026.
+El plan activo y el estado por etapas se mantienen en [PlanEntrega5.md](PlanEntrega5.md). Este documento conserva la consigna y sus criterios de evaluación; no debe usarse como plan de trabajo anterior.
 
-## Estado actual del backend (ya implementado, no rehacer)
+Al último avance verificado:
 
-| Área | Estado |
-| --- | --- |
-| Arquitectura en capas (routes/controllers/services/repositories/models/middlewares/exceptions/responses) | Hecha. `ApiResponse` + `errorHandler` centralizados. |
-| Auth: registro público (solo clientes), login, logout, `/auth/me`, alta de staff por admin | Hecha, con roles, sesión, rate-limit y origen confiable. Persiste en `data/auth.json`. |
-| Turnos (reservas de cancha): crear, disponibilidad pública, "mis turnos", listar, ver, reprogramar, confirmar, cancelar, eliminar | Hecha. Evita superposición (`ensureAvailable`). |
-| Operaciones internas (`/interno`): clientes, pagos, membresías de gym, asistencias, torneos (equipos, fixture, partidos, resultados) | Hecha. Persiste en `data/operations.json`. |
-| Info pública: gym, paquetes de cumpleaños, torneos | Hecha (datos estáticos + torneos operativos). |
-
-## Brechas detectadas (pendiente para esta entrega)
-
-1. **Turnos en memoria**: `TurnoRepository` guarda en un array; se pierden al reiniciar y los pagos quedan huérfanos. Persistir en JSON como los otros repositorios.
-2. **El cliente no puede cancelar su propio turno**: `POST /turnos/:id/cancelar` es solo empleado/admin. Falta cancelación propia con validación de pertenencia y de anticipación.
-3. **Cumpleaños simulado**: `createBirthdayInquiry` no persiste ni bloquea la cancha (la respuesta dice "Consulta simulada"). La consigna prohíbe funcionalidades que solo simulen.
-4. **Cumpleaños no ocupa la cancha**: `ensureAvailable` solo mira turnos; debe considerar también las reservas de cumpleaños confirmadas.
-5. **Cancha única implícita**: no hay entidad cancha; confirmar si el negocio tiene una o varias (afecta disponibilidad).
-6. **Horarios disponibles**: `/turnos/disponibilidad` devuelve los turnos ocupados, no franjas libres. Agregar cálculo de franjas libres por fecha (horario de apertura, duración).
-7. **Validaciones a revisar**: fechas pasadas, horario de atención, duración mínima/máxima, límite de jugadores, duplicados de email/teléfono en registro.
-8. **Tests**: faltan tests de cancelación propia, persistencia de turnos, cumpleaños y franjas libres.
-
-## Pasos propuestos (uno por commit, con tests)
-
-1. **Persistencia de turnos**: `TurnoRepository` lee/escribe `data/turnos.json` (patrón de `OperationsRepository`: escritura atómica, seed vacío). Tests de repositorio.
-2. **Franjas disponibles**: `TurnoService.getAvailableSlots(fecha)` + `GET /turnos/disponibilidad?fecha=`; reglas de horario de atención y fechas pasadas en `validateTurno.js`.
-3. **Cancelación por el cliente**: `POST /turnos/:id/cancelar` habilitado para `cliente` (solo si es suyo, estado cancelable y con anticipación mínima); errores con `ForbiddenError`/`ConflictError`. Tests de servicio y rutas.
-4. **Reservas de cumpleaños reales**: modelo `Cumpleanos`, repositorio JSON, `PublicInfoService` → servicio propio; crear (cliente), listar "mis cumpleaños", confirmar/cancelar (empleado). Estado inicial "Pendiente" sin bloqueo; al confirmar, bloquea la cancha.
-5. **Disponibilidad unificada**: `ensureAvailable` considera turnos y cumpleaños confirmados (mismo recurso físico). Tests de conflicto cruzado.
-6. **Revisión de validaciones y mensajes**: duplicados en registro, formatos, registros inexistentes; mensajes en `Messages.js`. 
-7. **Cierre**: `npm test` en backend, actualizar `backend/README.md` con los endpoints nuevos.
-
-## Decisiones confirmadas por el usuario
-
-- Hay **una sola cancha**.
-- Cada turno dura **exactamente 1 hora**.
-- El cliente puede cancelar sin cargo con **hasta 12 h de anticipación**. Con menos anticipación **se le cobra igual**: la cancelación tardía se permite pero queda marcada (ej. `cancelacionTardia: true`) y genera un cargo pendiente para registrar en pagos.
-- Las consultas de cumpleaños **requieren confirmación del empleado**; al confirmarse bloquean la cancha.
-
-- Horario de atención: **de 12:00 a 22:00**. Las franjas libres son 10 bloques de 1 hora (12-13 ... 21-22); ningún turno puede terminar después de las 22:00.
-
-### Impacto en el plan
-
-- Paso 2: las franjas libres son bloques de 1 hora; `validateTurno.js` debe exigir `horaFin = horaInicio + 1 h`.
-- Paso 3: la cancelación del cliente nunca se bloquea por anticipación; si faltan menos de 12 h se registra el cargo.
-- Paso 4 y 5: cumpleaños (2 o 3 h) ocupa varias franjas consecutivas de la única cancha.
-
-## Después de la Parte 1
-
-Partes 2–5: conectar la UI (`frontend/src/services` + páginas) a los endpoints nuevos, validar flujo completo, y grabar el video sobre un flujo (propuesta: reserva de cancha cliente → confirmación del empleado).
+- La disponibilidad, la cancelación propia y el registro manual de pagos tardíos están implementados.
+- Las solicitudes de cumpleaños se persisten, pueden consultarse por el cliente y gestionarse desde el panel interno.
+- La cancha compartida impide superposiciones entre turnos y cumpleaños confirmados.
+- La integración de cumpleaños ya consume los endpoints desde las interfaces de cliente y personal.
+- La suite reportó 39 pruebas backend y 14 frontend aprobadas, y el build frontend finalizó correctamente.
+- En navegador se verificó el recorrido de solicitud de cliente, confirmación del personal, bloqueo de disponibilidad y persistencia tras reiniciar el backend. La revisión visual responsive de todas las pantallas y la grabación del video siguen pendientes según el plan activo.

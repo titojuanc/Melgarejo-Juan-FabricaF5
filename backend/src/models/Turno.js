@@ -9,7 +9,8 @@ class Turno {
         cantidadJugadores,
         incluyeLuces,
         estado,
-        clienteId
+        clienteId,
+        cancelacionTardia = false,
     ) {
         this.id = id;
         this.fecha = fecha;
@@ -19,6 +20,7 @@ class Turno {
         this.incluyeLuces = incluyeLuces;
         this.estado = estado;
         this.clienteId = clienteId;
+        this.cancelacionTardia = cancelacionTardia;
     }
 
     confirmar() {

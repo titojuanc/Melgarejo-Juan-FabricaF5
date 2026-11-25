@@ -1,4 +1,4 @@
-import { BadRequestError, NotFoundError } from "../exceptions/AppError.js";
+import { NotFoundError } from "../exceptions/AppError.js";
 
 const birthdayPackages = [
     {
@@ -62,25 +62,6 @@ const tournaments = [
     },
 ];
 
-function validDateTime(fecha, horaInicio) {
-    if (
-        typeof fecha !== "string" ||
-        !/^\d{4}-\d{2}-\d{2}$/.test(fecha) ||
-        typeof horaInicio !== "string" ||
-        !/^([01]\d|2[0-3]):[0-5]\d$/.test(horaInicio)
-    ) {
-        return null;
-    }
-    const date = new Date(`${fecha}T${horaInicio}:00`);
-    if (
-        Number.isNaN(date.getTime()) ||
-        date.toISOString().slice(0, 10) !== fecha
-    ) {
-        return null;
-    }
-    return date;
-}
-
 export class PublicInfoService {
     getGym() {
         return {
@@ -99,35 +80,6 @@ export class PublicInfoService {
 
     getBirthdayPackages() {
         return structuredClone(birthdayPackages);
-    }
-
-    createBirthdayInquiry(data) {
-        const birthdayPackage = birthdayPackages.find(
-            (item) => item.id === data?.paqueteId,
-        );
-        const date = validDateTime(data?.fecha, data?.horaInicio);
-        if (!birthdayPackage || !date) {
-            throw new BadRequestError(
-                "Selecciona un paquete, una fecha y una hora validos.",
-            );
-        }
-        if (date.getTime() - Date.now() < 48 * 60 * 60 * 1000) {
-            throw new BadRequestError(
-                "Las consultas de cumpleaños requieren 48 horas de anticipacion.",
-            );
-        }
-        return {
-            mensaje:
-                "Consulta simulada. No se confirmo ni se bloqueo la cancha.",
-            consulta: {
-                paqueteId: birthdayPackage.id,
-                fecha: data.fecha,
-                horaInicio: data.horaInicio,
-                duracionHoras: birthdayPackage.duracionHoras,
-                confirmada: false,
-                bloqueaCancha: false,
-            },
-        };
     }
 
     getTournaments() {

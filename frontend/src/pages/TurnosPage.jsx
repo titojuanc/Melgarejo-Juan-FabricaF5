@@ -28,6 +28,7 @@ export default function TurnosPage() {
     const [canceling, setCanceling] = useState(null);
     const [busy, setBusy] = useState(false);
     const isStaff = user && ["empleado", "admin"].includes(user.rol);
+    const isClient = user?.rol === "cliente";
     const filtered = turnos
         .filter(
             (turno) =>
@@ -142,7 +143,7 @@ export default function TurnosPage() {
                                         "Jugadores",
                                         "Luces",
                                         "Estado",
-                                        ...(isStaff ? ["Acciones"] : []),
+                                        ...(isStaff || isClient ? ["Acciones"] : []),
                                     ].map((heading) => (
                                         <th scope="col" key={heading}>
                                             {heading}
@@ -168,12 +169,15 @@ export default function TurnosPage() {
                                                 className={`status-badge ${turno.estado === "Cancelado" ? "cancelled" : ""}`}
                                             >
                                                 {turno.estado}
+                                                {turno.cancelacionTardia &&
+                                                    " · Tardía"}
                                             </span>
                                         </td>
-                                        {isStaff && (
+                                        {(isStaff || isClient) && (
                                             <td>
                                                 <div className="row-actions">
-                                                    {turno.estado !== "Cancelado" && (
+                                                    {isStaff &&
+                                                        turno.estado !== "Cancelado" && (
                                                         <button
                                                             className="icon-button"
                                                             title={`Reprogramar turno ${turno.id}`}
@@ -183,7 +187,8 @@ export default function TurnosPage() {
                                                             <Pencil size={17} />
                                                         </button>
                                                     )}
-                                                    {turno.estado === "Pendiente" && (
+                                                    {isStaff &&
+                                                        turno.estado === "Pendiente" && (
                                                         <button
                                                             className="icon-button"
                                                             title={`Confirmar turno ${turno.id}`}
@@ -194,11 +199,13 @@ export default function TurnosPage() {
                                                             <CheckCircle2 size={17} />
                                                         </button>
                                                     )}
-                                                    {turno.estado !== "Cancelado" && (
+                                                    {(isStaff || isClient) &&
+                                                        turno.estado !== "Cancelado" && (
                                                         <button
                                                             className="icon-button danger-icon"
                                                             title={`Cancelar turno ${turno.id}`}
                                                             aria-label={`Cancelar turno ${turno.id}`}
+                                                            disabled={busy}
                                                             onClick={() => setCanceling(turno)}
                                                         >
                                                             <Ban size={17} />
@@ -254,6 +261,13 @@ export default function TurnosPage() {
                         {formatDate(canceling.fecha)}, de {canceling.horaInicio} a{" "}
                         {canceling.horaFin}. El registro se conservara.
                     </p>
+                    {isClient && (
+                        <p>
+                            Si faltan menos de 12 horas, la cancelación quedará
+                            marcada como tardía. El personal registrará
+                            manualmente cualquier pago que reciba.
+                        </p>
+                    )}
                     <div className="modal-actions">
                         <button
                             className="button secondary"

@@ -1,8 +1,36 @@
 import turnoRepository from "../repositories/TurnoRepository.js";
 import { validateTurnoData } from "../utils/validateTurno.js";
-import { BadRequestError, ConflictError, NotFoundError } from "../exceptions/AppError.js";
+import {
+    BadRequestError,
+    ConflictError,
+    ForbiddenError,
+    NotFoundError,
+} from "../exceptions/AppError.js";
 import { Messages } from "../enums/Messages.js";
 import authService from "./AuthService.js";
+import cumpleanosRepository from "../repositories/CumpleanosRepository.js";
+
+const openingHour = 12;
+const closingHour = 22;
+
+function isValidDate(fecha) {
+    if (typeof fecha !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(fecha)) {
+        return false;
+    }
+    const parsedDate = new Date(`${fecha}T00:00:00.000Z`);
+    return (
+        !Number.isNaN(parsedDate.getTime()) &&
+        parsedDate.toISOString().slice(0, 10) === fecha
+    );
+}
+
+function localDateKey(date) {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+function formatHour(hour) {
+    return `${String(hour).padStart(2, "0")}:00`;
+}
 
 const editableFields = new Set([
     "fecha",
@@ -13,22 +41,57 @@ const editableFields = new Set([
 ]);
 
 export class TurnoService {
-    constructor(repository = turnoRepository, auth = authService) {
+    constructor(
+        repository = turnoRepository,
+        auth = authService,
+        birthdays = cumpleanosRepository,
+    ) {
         this.repository = repository;
         this.auth = auth;
+        this.birthdays = birthdays;
     }
 
     getAll() {
         return this.repository.findAll();
     }
 
-    getAvailability() {
-        return this.repository.findAll().map(({ fecha, horaInicio, horaFin, estado }) => ({
-            fecha,
-            horaInicio,
-            horaFin,
-            estado,
-        }));
+    getAvailability(fecha) {
+        if (!isValidDate(fecha)) {
+            throw new BadRequestError("La fecha consultada no es valida.");
+        }
+        const now = new Date();
+        if (fecha < localDateKey(now)) {
+            throw new BadRequestError("La fecha consultada debe ser futura.");
+        }
+
+        const occupiedTurnos = this.repository.findAll().filter(
+            (turno) => turno.fecha === fecha && turno.estado !== "Cancelado",
+        );
+        const confirmedBirthdays = this.birthdays
+            .findAll()
+            .filter(
+                (item) => item.fecha === fecha && item.estado === "Confirmado",
+            );
+        const slots = [];
+        for (let hour = openingHour; hour < closingHour; hour += 1) {
+            const horaInicio = formatHour(hour);
+            const horaFin = formatHour(hour + 1);
+            const startsAt = new Date(`${fecha}T${horaInicio}:00`);
+            const occupied =
+                occupiedTurnos.some(
+                    (turno) =>
+                        turno.horaInicio < horaFin &&
+                        turno.horaFin > horaInicio,
+                ) ||
+                confirmedBirthdays.some(
+                    (item) =>
+                        item.horaInicio < horaFin && item.horaFin > horaInicio,
+                );
+            if (!occupied && startsAt > now) {
+                slots.push({ fecha, horaInicio, horaFin });
+            }
+        }
+        return slots;
     }
 
     getMine(clienteId) {
@@ -89,13 +152,26 @@ export class TurnoService {
         return turno;
     }
 
+    cancelOwn(id, user) {
+        const turno = this.getById(id);
+        if (user?.rol !== "cliente" || turno.clienteId !== user.clienteId) {
+            throw new ForbiddenError();
+        }
+        const startsAt = new Date(`${turno.fecha}T${turno.horaInicio}:00`);
+        const late = startsAt.getTime() - Date.now() < 12 * 60 * 60 * 1000;
+        turno.cancelar();
+        if (late) turno.cancelacionTardia = true;
+        this.repository.save();
+        return turno;
+    }
+
     delete(id) {
         this.getById(id);
         this.repository.delete(id);
     }
 
     ensureAvailable(data, excludeId) {
-        const conflict = this.repository.findAll().some(
+        const turnoConflict = this.repository.findAll().some(
             (turno) =>
                 turno.id !== excludeId &&
                 turno.estado !== "Cancelado" &&
@@ -103,7 +179,8 @@ export class TurnoService {
                 turno.horaInicio < data.horaFin &&
                 turno.horaFin > data.horaInicio,
         );
-        if (conflict) {
+        const birthdayConflict = this.birthdays.hasConfirmedConflict(data);
+        if (turnoConflict || birthdayConflict) {
             throw new ConflictError("Ese horario ya no esta disponible.");
         }
     }
